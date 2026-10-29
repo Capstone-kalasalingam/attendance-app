@@ -20,7 +20,6 @@ backend/seed
 *.dylib
 *.test
 *.out
-vendor/
 
 # Flutter / Dart
 flutter_app/.dart_tool/

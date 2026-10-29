@@ -1,18 +1,16 @@
 # Standalone Dockerfile for Go backend
-FROM golang:1.23-alpine AS builder
+FROM golang:alpine AS builder
 
 WORKDIR /app
 
 RUN apk add --no-cache git ca-certificates tzdata
 
-COPY go.mod go.sum ./
-RUN go mod download
-
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/server ./cmd/api
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/migrate ./cmd/migrate
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/seed ./cmd/seed
+# Compile backend server, migration runner, and seeder offline with vendor
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -ldflags="-w -s" -o /app/server ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -ldflags="-w -s" -o /app/migrate ./cmd/migrate
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -ldflags="-w -s" -o /app/seed ./cmd/seed
 
 # Production image
 FROM alpine:3.20
