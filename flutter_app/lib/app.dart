@@ -48,7 +48,7 @@ class AttendanceApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Glassmorphic Attendance',
       debugShowCheckedModeBanner: false,
-      theme: GlassTheme.darkTheme,
+      theme: GlassTheme.lightTheme,
       routerConfig: router,
     );
   }

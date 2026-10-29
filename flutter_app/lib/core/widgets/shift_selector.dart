@@ -18,9 +18,9 @@ class ShiftSelector extends StatelessWidget {
     final isMorning = currentShift.toLowerCase() == 'morning';
 
     return Container(
-      padding: const EdgeInsets.all(2),
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: const Color(0x14FFFFFF),
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppColors.glassBorder, width: 1),
       ),
@@ -32,6 +32,8 @@ class ShiftSelector extends StatelessWidget {
             icon: Icons.wb_sunny_rounded,
             isSelected: isMorning,
             activeColor: AppColors.morningAmber,
+            activeBgColor: AppColors.morningAmberBg,
+            activeBorderColor: AppColors.morningAmberBorder,
             onTap: isSaving ? null : () => onShiftChanged('morning'),
           ),
           _ShiftOption(
@@ -39,6 +41,8 @@ class ShiftSelector extends StatelessWidget {
             icon: Icons.nightlight_round,
             isSelected: !isMorning,
             activeColor: AppColors.nightViolet,
+            activeBgColor: AppColors.nightVioletBg,
+            activeBorderColor: AppColors.nightVioletBorder,
             onTap: isSaving ? null : () => onShiftChanged('night'),
           ),
         ],
@@ -52,6 +56,8 @@ class _ShiftOption extends StatelessWidget {
   final IconData icon;
   final bool isSelected;
   final Color activeColor;
+  final Color activeBgColor;
+  final Color activeBorderColor;
   final VoidCallback? onTap;
 
   const _ShiftOption({
@@ -59,6 +65,8 @@ class _ShiftOption extends StatelessWidget {
     required this.icon,
     required this.isSelected,
     required this.activeColor,
+    required this.activeBgColor,
+    required this.activeBorderColor,
     this.onTap,
   });
 
@@ -69,12 +77,21 @@ class _ShiftOption extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor.withOpacity(0.25) : Colors.transparent,
+          color: isSelected ? activeBgColor : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: isSelected
-              ? Border.all(color: activeColor.withOpacity(0.6), width: 1)
+              ? Border.all(color: activeBorderColor, width: 1)
+              : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: activeColor.withOpacity(0.08),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
               : null,
         ),
         child: Row(
@@ -91,8 +108,8 @@ class _ShiftOption extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? Colors.white : AppColors.textMuted,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? activeColor : AppColors.textMuted,
               ),
             ),
           ],

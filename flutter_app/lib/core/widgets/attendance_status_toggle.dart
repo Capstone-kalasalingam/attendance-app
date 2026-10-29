@@ -18,96 +18,105 @@ class AttendanceStatusToggle extends StatelessWidget {
     final isPresent = currentStatus == 'present';
     final isAbsent = currentStatus == 'absent';
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Present Pill Button
-        _StatusButton(
-          label: 'Present',
-          icon: Icons.check_circle_rounded,
-          isSelected: isPresent,
-          activeColor: AppColors.presentEmerald,
-          activeGlowColor: AppColors.presentGlow,
-          onTap: isSaving ? null : () => onStatusChanged('present'),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+      decoration: BoxDecoration(
+        color: isPresent
+            ? AppColors.presentBg
+            : (isAbsent ? AppColors.absentBg : const Color(0xFFF1F5F9)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isPresent
+              ? AppColors.presentBorder
+              : (isAbsent ? AppColors.absentBorder : AppColors.glassBorder),
+          width: 1.2,
         ),
-        const SizedBox(width: 8),
-
-        // Absent Pill Button
-        _StatusButton(
-          label: 'Absent',
-          icon: Icons.cancel_rounded,
-          isSelected: isAbsent,
-          activeColor: AppColors.absentRose,
-          activeGlowColor: AppColors.absentGlow,
-          onTap: isSaving ? null : () => onStatusChanged('absent'),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatusButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final Color activeColor;
-  final Color activeGlowColor;
-  final VoidCallback? onTap;
-
-  const _StatusButton({
-    required this.label,
-    required this.icon,
-    required this.isSelected,
-    required this.activeColor,
-    required this.activeGlowColor,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? activeColor.withOpacity(0.22) : const Color(0x10FFFFFF),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? activeColor : const Color(0x20FFFFFF),
-            width: isSelected ? 1.5 : 1.0,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: activeGlowColor,
-                    blurRadius: 10,
-                    spreadRadius: 1,
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 15,
-              color: isSelected ? activeColor : AppColors.textMuted,
-            ),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? Colors.white : AppColors.textSecondary,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Absent Label
+          InkWell(
+            onTap: isSaving ? null : () => onStatusChanged('absent'),
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Text(
+                'Absent',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 11,
+                  fontWeight: isAbsent ? FontWeight.w700 : FontWeight.w500,
+                  color: isAbsent ? AppColors.absentRose : AppColors.textSubtle,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+
+          // Sliding Toggle Track & Thumb
+          InkWell(
+            onTap: isSaving
+                ? null
+                : () {
+                    onStatusChanged(isPresent ? 'absent' : 'present');
+                  },
+            borderRadius: BorderRadius.circular(12),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 36,
+              height: 20,
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: isPresent
+                    ? AppColors.presentEmerald
+                    : (isAbsent ? AppColors.absentRose : const Color(0xFFCBD5E1)),
+              ),
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 200),
+                alignment: isPresent ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x33000000),
+                        blurRadius: 3,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    isPresent ? Icons.check_rounded : Icons.close_rounded,
+                    size: 11,
+                    color: isPresent ? AppColors.presentEmerald : AppColors.absentRose,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Present Label
+          InkWell(
+            onTap: isSaving ? null : () => onStatusChanged('present'),
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Text(
+                'Present',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 11,
+                  fontWeight: isPresent ? FontWeight.w700 : FontWeight.w500,
+                  color: isPresent ? AppColors.presentEmerald : AppColors.textSubtle,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

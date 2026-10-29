@@ -35,12 +35,21 @@ class QuickFilterChips extends StatelessWidget {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF6366F1).withOpacity(0.3) : const Color(0x10FFFFFF),
+                  color: isSelected ? const Color(0xFF4F46E5) : Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isSelected ? const Color(0xFF818CF8) : const Color(0x1AFFFFFF),
+                    color: isSelected ? const Color(0xFF4F46E5) : AppColors.glassBorder,
                     width: 1,
                   ),
+                  boxShadow: isSelected
+                      ? const [
+                          BoxShadow(
+                            color: Color(0x334F46E5),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ]
+                      : const [AppColors.cardShadow],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -48,7 +57,7 @@ class QuickFilterChips extends StatelessWidget {
                     Icon(
                       f['icon'] as IconData,
                       size: 14,
-                      color: isSelected ? const Color(0xFF818CF8) : AppColors.textMuted,
+                      color: isSelected ? Colors.white : AppColors.textMuted,
                     ),
                     const SizedBox(width: 6),
                     Text(
@@ -56,7 +65,7 @@ class QuickFilterChips extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 12,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                         color: isSelected ? Colors.white : AppColors.textSecondary,
                       ),
                     ),

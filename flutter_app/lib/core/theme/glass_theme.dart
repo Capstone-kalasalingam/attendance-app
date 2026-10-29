@@ -4,18 +4,20 @@ import 'app_colors.dart';
 class GlassTheme {
   static const String fontFamily = 'Poppins';
 
-  static ThemeData get darkTheme {
+  static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       fontFamily: fontFamily,
-      scaffoldBackgroundColor: AppColors.bgDarkNavy,
-      colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF6366F1),
+      scaffoldBackgroundColor: AppColors.bgLight,
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF4F46E5),
         onPrimary: Colors.white,
-        secondary: Color(0xFF8B5CF6),
-        surface: AppColors.bgDeepBlue,
+        secondary: Color(0xFF6366F1),
+        surface: Colors.white,
+        onSurface: AppColors.textPrimary,
         error: AppColors.absentRose,
+        onError: Colors.white,
       ),
       textTheme: const TextTheme(
         headlineLarge: TextStyle(
@@ -71,7 +73,7 @@ class GlassTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.glassSurface,
+        fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         hintStyle: const TextStyle(
           fontFamily: fontFamily,
@@ -93,7 +95,7 @@ class GlassTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -105,14 +107,15 @@ class GlassTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: Colors.white,
+        elevation: 8,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: AppColors.glassBorder),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: const Color(0xFF1E1B4B).withOpacity(0.95),
+        backgroundColor: AppColors.textPrimary,
         contentTextStyle: const TextStyle(
           fontFamily: fontFamily,
           color: Colors.white,
@@ -120,10 +123,13 @@ class GlassTheme {
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: AppColors.glassBorder),
         ),
         behavior: SnackBarBehavior.floating,
       ),
+      dividerColor: AppColors.glassBorder,
     );
   }
+
+  // Alias darkTheme to lightTheme so existing references seamlessly get the new crisp white UI
+  static ThemeData get darkTheme => lightTheme;
 }

@@ -1,27 +1,31 @@
-import 'package:flutter/foundation.dart';
-
 class AppConfig {
-  static const String appName = 'Glassmorphic Attendance';
+  static const String appName = 'ShiftMaster Attendance';
   static const String appVersion = '1.0.0';
 
-  // Base URL can be configured at compile time using:
-  // flutter run --dart-define=API_BASE_URL=https://your-api.com
-  static String get apiBaseUrl {
-    const definedUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-    if (definedUrl.isNotEmpty) {
-      return definedUrl;
-    }
+  // Primary deployed server endpoint (can be overridden via --dart-define or runtime settings)
+  static const String defaultApiBaseUrl =
+      'http://6zw5w6pyiv17takt0903hayt.51.79.133.26.sslip.io';
 
-    if (kIsWeb) {
-      return 'http://localhost:8080';
-    }
+  // SharedPreferences storage key for dynamic runtime override
+  static const String storageKeyServerUrl = 'custom_api_base_url';
 
-    // Android emulator alias for host machine
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:8080';
-    }
+  // Resolved base URL (compile-time environment variable fallback to defaultApiBaseUrl)
+  static String _activeBaseUrl = const String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: defaultApiBaseUrl,
+  );
 
-    // macOS, iOS simulator, Windows, Linux
-    return 'http://localhost:8080';
+  static String get apiBaseUrl => _activeBaseUrl;
+
+  static void setActiveBaseUrl(String url) {
+    _activeBaseUrl = cleanUrl(url);
+  }
+
+  static String cleanUrl(String url) {
+    var trimmed = url.trim();
+    while (trimmed.endsWith('/')) {
+      trimmed = trimmed.substring(0, trimmed.length - 1);
+    }
+    return trimmed;
   }
 }

@@ -50,9 +50,9 @@ class AttendanceRowWidget extends StatelessWidget {
             spacing: 8,
             children: [4.0, 8.0, 9.0, 10.0, 12.0].map((h) {
               return ActionChip(
-                label: Text('${h.toInt()}h', style: const TextStyle(fontFamily: 'Poppins', fontSize: 11)),
-                backgroundColor: const Color(0x226366F1),
-                side: const BorderSide(color: Color(0x44818CF8)),
+                label: Text('${h.toInt()}h', style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600)),
+                backgroundColor: const Color(0xFFF1F5F9),
+                side: const BorderSide(color: AppColors.glassBorder),
                 onPressed: () {
                   controller.text = h.toString();
                 },
@@ -68,7 +68,7 @@ class AttendanceRowWidget extends StatelessWidget {
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF6366F1),
+            backgroundColor: const Color(0xFF4F46E5),
             foregroundColor: Colors.white,
           ),
           onPressed: () {
@@ -86,7 +86,7 @@ class AttendanceRowWidget extends StatelessWidget {
 
   void _showDescriptionDialog(BuildContext context) {
     final controller = TextEditingController(text: row.workDescription ?? '');
-    final quickTasks = ['Packing', 'Loading', 'Machine operation', 'Cleaning', 'Maintenance', 'Assembly line', 'Dispatch'];
+    final quickTasks = ['Packing cartons', 'Loading & Dispatch', 'Machine line operation', 'Cleaning & Inspection', 'Maintenance duty', 'Assembly line work'];
 
     GlassDialog.show(
       context: context,
@@ -100,9 +100,9 @@ class AttendanceRowWidget extends StatelessWidget {
             children: [
               GlassTextField(
                 controller: controller,
-                labelText: 'Task / Activity (Optional)',
-                hintText: 'e.g. Packing cartons, Machine line 2',
-                maxLines: 2,
+                labelText: 'Task / Activity Done Today',
+                hintText: 'Type complete details of tasks completed...',
+                maxLines: 3,
                 autofocus: true,
               ),
               const SizedBox(height: 14),
@@ -120,6 +120,7 @@ class AttendanceRowWidget extends StatelessWidget {
                 spacing: 6,
                 runSpacing: 6,
                 children: quickTasks.map((task) {
+                  final isSelected = controller.text == task;
                   return InkWell(
                     onTap: () {
                       controller.text = task;
@@ -129,14 +130,10 @@ class AttendanceRowWidget extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: controller.text == task
-                            ? const Color(0x446366F1)
-                            : const Color(0x15FFFFFF),
+                        color: isSelected ? const Color(0xFFEEF2FF) : const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: controller.text == task
-                              ? const Color(0xFF818CF8)
-                              : const Color(0x22FFFFFF),
+                          color: isSelected ? const Color(0xFF4F46E5) : AppColors.glassBorder,
                         ),
                       ),
                       child: Text(
@@ -144,7 +141,8 @@ class AttendanceRowWidget extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 11,
-                          color: controller.text == task ? Colors.white : AppColors.textSecondary,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                          color: isSelected ? const Color(0xFF4F46E5) : AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -162,7 +160,7 @@ class AttendanceRowWidget extends StatelessWidget {
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF6366F1),
+            backgroundColor: const Color(0xFF4F46E5),
             foregroundColor: Colors.white,
           ),
           onPressed: () {
@@ -179,44 +177,41 @@ class AttendanceRowWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 950;
-
-        if (isMobile) {
+        if (constraints.maxWidth < 950) {
           return _buildMobileCard(context);
-        } else {
-          return _buildDesktopRow(context);
         }
+        return _buildTableRow(context);
       },
     );
   }
 
-  // DESKTOP & TABLET COMPACT ROW
-  Widget _buildDesktopRow(BuildContext context) {
+  // DESKTOP TABLE ROW
+  Widget _buildTableRow(BuildContext context) {
     return GlassPanel(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       margin: const EdgeInsets.only(bottom: 8),
       borderRadius: 14,
-      surfaceColor: isSelected ? const Color(0x286366F1) : const Color(0x12FFFFFF),
-      borderColor: isSelected ? const Color(0x66818CF8) : const Color(0x1AFFFFFF),
+      surfaceColor: isSelected ? const Color(0xFFF0F4FF) : Colors.white,
+      borderColor: isSelected ? const Color(0xFF818CF8) : AppColors.glassBorder,
       child: Row(
         children: [
           // Bulk selection checkbox
           SizedBox(
-            width: 24,
-            height: 24,
+            width: 22,
+            height: 22,
             child: Checkbox(
               value: isSelected,
               onChanged: onSelectChanged,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-              activeColor: const Color(0xFF6366F1),
-              side: const BorderSide(color: Color(0x44FFFFFF), width: 1.2),
+              activeColor: const Color(0xFF4F46E5),
+              side: const BorderSide(color: AppColors.glassBorderStrong, width: 1.2),
             ),
           ),
           const SizedBox(width: 12),
 
           // Avatar initials badge
           _buildAvatar(),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
 
           // Employee Info
           Expanded(
@@ -244,8 +239,9 @@ class AttendanceRowWidget extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0x18FFFFFF),
+                        color: const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: AppColors.glassBorder),
                       ),
                       child: Text(
                         row.employeeCode,
@@ -282,69 +278,109 @@ class AttendanceRowWidget extends StatelessWidget {
             onShiftChanged: onShiftChanged,
             isSaving: row.isSaving,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
 
-          // Attendance Status Toggle (Present / Absent)
+          // Attendance Status Toggle Switch
           AttendanceStatusToggle(
             currentStatus: row.status,
             onStatusChanged: onStatusChanged,
             isSaving: row.isSaving,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
 
-          // Hours Worked Pill
-          InkWell(
-            onTap: () => _showHoursDialog(context),
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(
-                color: const Color(0x14FFFFFF),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0x22FFFFFF)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.timer_outlined, size: 14, color: Color(0xFF38BDF8)),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${row.hoursWorked.toStringAsFixed(1)}h',
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+          // Timings & Hours Stepper
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.glassBorder),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                InkWell(
+                  onTap: () {
+                    final newHours = (row.hoursWorked - 0.5).clamp(0.0, 24.0);
+                    onHoursChanged(double.parse(newHours.toStringAsFixed(1)));
+                  },
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.glassBorder),
+                    ),
+                    child: const Icon(Icons.remove_rounded, size: 14, color: AppColors.textSecondary),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: () => _showHoursDialog(context),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF0284C7)),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${row.hoursWorked.toStringAsFixed(1)}h',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.edit_outlined, size: 12, color: AppColors.textMuted),
-                ],
-              ),
+                ),
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: () {
+                    final newHours = (row.hoursWorked + 0.5).clamp(0.0, 24.0);
+                    onHoursChanged(double.parse(newHours.toStringAsFixed(1)));
+                  },
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.glassBorder),
+                    ),
+                    child: const Icon(Icons.add_rounded, size: 14, color: AppColors.textSecondary),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
 
-          // Work Description Pill
+          // Work Description (Spacious Flex 3)
           Expanded(
-            flex: 2,
+            flex: 3,
             child: InkWell(
               onTap: () => _showDescriptionDialog(context),
               borderRadius: BorderRadius.circular(10),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                 decoration: BoxDecoration(
-                  color: const Color(0x10FFFFFF),
+                  color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0x18FFFFFF)),
+                  border: Border.all(color: AppColors.glassBorder),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.edit_note_rounded, size: 15, color: AppColors.textMuted),
+                    const Icon(Icons.edit_note_rounded, size: 15, color: Color(0xFF4F46E5)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        row.workDescription ?? 'Add task...',
+                        row.workDescription ?? 'Add work description...',
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 11,
@@ -381,14 +417,14 @@ class AttendanceRowWidget extends StatelessWidget {
   Widget _buildMobileCard(BuildContext context) {
     return GlassPanel(
       padding: const EdgeInsets.all(14),
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
       borderRadius: 16,
-      surfaceColor: isSelected ? const Color(0x286366F1) : const Color(0x12FFFFFF),
-      borderColor: isSelected ? const Color(0x66818CF8) : const Color(0x1AFFFFFF),
+      surfaceColor: isSelected ? const Color(0xFFF0F4FF) : Colors.white,
+      borderColor: isSelected ? const Color(0xFF818CF8) : AppColors.glassBorder,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Top Row: Checkbox, Avatar, Name, Shift, Menu
+          // 1. Top Row: Checkbox, Avatar, Name & Code, Shift Selector, Menu
           Row(
             children: [
               SizedBox(
@@ -398,8 +434,8 @@ class AttendanceRowWidget extends StatelessWidget {
                   value: isSelected,
                   onChanged: onSelectChanged,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                  activeColor: const Color(0xFF6366F1),
-                  side: const BorderSide(color: Color(0x44FFFFFF), width: 1.2),
+                  activeColor: const Color(0xFF4F46E5),
+                  side: const BorderSide(color: AppColors.glassBorderStrong, width: 1.2),
                 ),
               ),
               const SizedBox(width: 8),
@@ -413,7 +449,7 @@ class AttendanceRowWidget extends StatelessWidget {
                       row.fullName,
                       style: const TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
@@ -424,7 +460,7 @@ class AttendanceRowWidget extends StatelessWidget {
                       '${row.employeeCode}${row.designation != null ? ' • ${row.designation}' : ''}',
                       style: const TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 10,
+                        fontSize: 11,
                         color: AppColors.textMuted,
                       ),
                     ),
@@ -437,8 +473,8 @@ class AttendanceRowWidget extends StatelessWidget {
                 isSaving: row.isSaving,
               ),
               IconButton(
-                icon: const Icon(Icons.more_vert_rounded, size: 18, color: AppColors.textMuted),
-                splashRadius: 16,
+                icon: const Icon(Icons.more_vert_rounded, size: 20, color: AppColors.textMuted),
+                splashRadius: 18,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 onPressed: onEditEmployee,
@@ -446,81 +482,141 @@ class AttendanceRowWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(color: Color(0x1AFFFFFF), height: 1),
+          const Divider(color: AppColors.glassBorder, height: 1),
           const SizedBox(height: 10),
 
-          // Bottom Controls: Status, Hours, Description
+          // 2. Middle Row: Present/Absent Toggle Switch & Timings Stepper
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // One-tap Present / Absent
+              // Attendance Status Toggle Switch
               AttendanceStatusToggle(
                 currentStatus: row.status,
                 onStatusChanged: onStatusChanged,
                 isSaving: row.isSaving,
               ),
-              const SizedBox(width: 8),
 
-              // Hours Worked
-              InkWell(
-                onTap: () => _showHoursDialog(context),
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0x14FFFFFF),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0x22FFFFFF)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.timer_outlined, size: 13, color: Color(0xFF38BDF8)),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${row.hoursWorked.toStringAsFixed(1)}h',
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+              // Timings & Hours Stepper with ample room
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.glassBorder),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Quick Decrement
+                    InkWell(
+                      onTap: () {
+                        final newHours = (row.hoursWorked - 0.5).clamp(0.0, 24.0);
+                        onHoursChanged(double.parse(newHours.toStringAsFixed(1)));
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: AppColors.glassBorder),
+                        ),
+                        child: const Icon(Icons.remove_rounded, size: 14, color: AppColors.textSecondary),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Tap to edit hours directly
+                    InkWell(
+                      onTap: () => _showHoursDialog(context),
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF0284C7)),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${row.hoursWorked.toStringAsFixed(1)}h',
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Quick Increment
+                    InkWell(
+                      onTap: () {
+                        final newHours = (row.hoursWorked + 0.5).clamp(0.0, 24.0);
+                        onHoursChanged(double.parse(newHours.toStringAsFixed(1)));
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: AppColors.glassBorder),
+                        ),
+                        child: const Icon(Icons.add_rounded, size: 14, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
+            ],
+          ),
+          const SizedBox(height: 10),
 
-              // Work Description
-              Expanded(
-                child: InkWell(
-                  onTap: () => _showDescriptionDialog(context),
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0x10FFFFFF),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0x18FFFFFF)),
-                    ),
+          // 3. Bottom Row: Dedicated Full-Width Spacious Work Description Field
+          InkWell(
+            onTap: () => _showDescriptionDialog(context),
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.glassBorder),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: Icon(Icons.edit_note_rounded, size: 16, color: Color(0xFF4F46E5)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
                     child: Text(
-                      row.workDescription ?? 'Task...',
+                      row.workDescription?.isNotEmpty == true
+                          ? row.workDescription!
+                          : 'Tap to enter work description & tasks done today...',
                       style: TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 10,
-                        fontStyle: row.workDescription == null ? FontStyle.italic : FontStyle.normal,
-                        color: row.workDescription == null ? AppColors.textSubtle : AppColors.textSecondary,
+                        fontSize: 12,
+                        fontStyle: (row.workDescription == null || row.workDescription!.isEmpty)
+                            ? FontStyle.italic
+                            : FontStyle.normal,
+                        color: (row.workDescription == null || row.workDescription!.isEmpty)
+                            ? AppColors.textSubtle
+                            : AppColors.textSecondary,
+                        height: 1.4,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
+                ],
               ),
-
-              const SizedBox(width: 6),
-              _buildRowStatusIndicator(),
-            ],
+            ),
           ),
         ],
       ),
@@ -530,17 +626,12 @@ class AttendanceRowWidget extends StatelessWidget {
   Widget _buildAvatar() {
     final initials = row.fullName.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join();
     return Container(
-      width: 34,
-      height: 34,
+      width: 36,
+      height: 36,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF4F46E5).withOpacity(0.8),
-            const Color(0xFF7C3AED).withOpacity(0.8),
-          ],
-        ),
+        color: const Color(0xFFEEF2FF),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0x44818CF8)),
+        border: Border.all(color: const Color(0xFFC7D2FE)),
       ),
       alignment: Alignment.center,
       child: Text(
@@ -548,8 +639,8 @@ class AttendanceRowWidget extends StatelessWidget {
         style: const TextStyle(
           fontFamily: 'Poppins',
           fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF4F46E5),
         ),
       ),
     );
@@ -562,7 +653,7 @@ class AttendanceRowWidget extends StatelessWidget {
         height: 16,
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF818CF8)),
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4F46E5)),
         ),
       );
     }
@@ -573,7 +664,7 @@ class AttendanceRowWidget extends StatelessWidget {
       );
     }
     if (row.saveSuccess) {
-      return const Icon(Icons.check_circle_outline_rounded, size: 16, color: AppColors.presentEmeraldLight);
+      return const Icon(Icons.check_circle_outline_rounded, size: 16, color: AppColors.presentEmerald);
     }
     return const SizedBox(width: 16);
   }

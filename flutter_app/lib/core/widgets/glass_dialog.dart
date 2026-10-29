@@ -28,7 +28,7 @@ class GlassDialog extends StatelessWidget {
   }) {
     return showDialog<T>(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.65),
+      barrierColor: Colors.black.withOpacity(0.35),
       builder: (context) => GlassDialog(
         title: title,
         content: content,
@@ -49,10 +49,16 @@ class GlassDialog extends StatelessWidget {
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: GlassPanel(
           borderRadius: 24,
-          blur: 20,
           borderWidth: 1.2,
-          borderColor: AppColors.glassBorderStrong,
-          surfaceColor: const Color(0x350F172A),
+          borderColor: AppColors.glassBorder,
+          surfaceColor: Colors.white,
+          shadows: const [
+            BoxShadow(
+              color: Color(0x1F000000),
+              blurRadius: 24,
+              offset: Offset(0, 8),
+            ),
+          ],
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -65,10 +71,10 @@ class GlassDialog extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0x336366F1),
+                        color: const Color(0xFFEEF2FF),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(titleIcon, color: const Color(0xFF818CF8), size: 20),
+                      child: Icon(titleIcon, color: const Color(0xFF4F46E5), size: 20),
                     ),
                     const SizedBox(width: 12),
                   ],

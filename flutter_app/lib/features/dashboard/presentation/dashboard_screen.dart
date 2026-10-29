@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_button.dart';
 import '../../../../core/widgets/glass_panel.dart';
 import '../../../../core/widgets/loading_overlay.dart';
+import '../../../../core/widgets/server_settings_dialog.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../employees/presentation/add_employee_dialog.dart';
 import '../../employees/presentation/edit_employee_dialog.dart';
@@ -38,12 +39,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       lastDate: DateTime(2030),
       builder: (context, child) {
         return Theme(
-          data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF6366F1),
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF4F46E5),
               onPrimary: Colors.white,
-              surface: Color(0xFF1E1B4B),
-              onSurface: Colors.white,
+              surface: Colors.white,
+              onSurface: AppColors.textPrimary,
             ),
           ),
           child: child!,
@@ -60,8 +61,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1B4B),
-        title: const Text('Mark Selected Present?', style: TextStyle(color: Colors.white, fontFamily: 'Poppins')),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.glassBorder),
+        ),
+        title: const Text(
+          'Mark Selected Present?',
+          style: TextStyle(color: AppColors.textPrimary, fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+        ),
         content: Text(
           'Mark ${selectedIds.length} selected employees as Present with standard 8.0 hours?',
           style: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins'),
@@ -72,7 +80,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.presentEmerald),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.presentEmerald,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () {
               Navigator.of(ctx).pop();
               ref.read(dashboardNotifierProvider.notifier).bulkMarkSelectedPresent(hours: 8.0);
@@ -91,6 +102,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final dashboardNotifier = ref.read(dashboardNotifierProvider.notifier);
 
     return Scaffold(
+      backgroundColor: AppColors.bgLight,
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppColors.mainBackgroundGradient,
@@ -104,8 +116,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               // 2. MAIN SCROLLABLE DASHBOARD
               Expanded(
                 child: RefreshIndicator(
-                  color: const Color(0xFF818CF8),
-                  backgroundColor: const Color(0xFF1E1B4B),
+                  color: const Color(0xFF4F46E5),
+                  backgroundColor: Colors.white,
                   onRefresh: () => dashboardNotifier.loadData(),
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -113,12 +125,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Today's Live Summary Cards
+                        // Today's Live Summary Cards (Zero overflow)
                         DashboardStatsHeader(
                           summary: dashboardState.summary,
                           isLoading: dashboardState.isLoading,
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 18),
 
                         // Search & Filter Toolbar
                         _buildFilterToolbar(dashboardState, dashboardNotifier),
@@ -135,7 +147,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           const Padding(
                             padding: EdgeInsets.all(40),
                             child: Center(
-                              child: CircularProgressIndicator(color: Color(0xFF818CF8)),
+                              child: CircularProgressIndicator(color: Color(0xFF4F46E5)),
                             ),
                           )
                         else if (dashboardState.error != null && dashboardState.allRows.isEmpty)
@@ -178,8 +190,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 onStatusChanged: (status) => dashboardNotifier.markStatus(row.employeeId, status),
                                 onShiftChanged: (shift) => dashboardNotifier.changeShift(row.employeeId, shift),
                                 onHoursChanged: (hours) => dashboardNotifier.updateHours(row.employeeId, hours),
-                                onDescriptionChanged: (desc) => dashboardNotifier.updateWorkDescription(row.employeeId, desc),
-                                onEditEmployee: () => EditEmployeeDialog.show(context, row),
+                                onDescriptionChanged: (desc) => dashboardNotifier.updateDescription(row.employeeId, desc),
+                                onEditEmployee: () => EditEmployeeDialog.show(
+                                  context,
+                                  employeeId: row.employeeId,
+                                  code: row.employeeCode,
+                                  name: row.fullName,
+                                  defaultShift: row.defaultShift,
+                                  designation: row.designation,
+                                ),
                               );
                             },
                           ),
@@ -195,7 +214,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  // TOP BAR
+  // TOP NAVIGATION & ACTION BAR
   Widget _buildTopBar(
     BuildContext context,
     AuthState authState,
@@ -206,10 +225,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 750;
 
-        return GlassPanel(
-          borderRadius: 0,
-          borderWidth: 0,
-          surfaceColor: const Color(0x220F172A),
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: AppColors.glassBorder)),
+            boxShadow: [AppColors.cardShadow],
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Column(
             children: [
@@ -244,22 +265,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 10,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textMuted.withOpacity(0.8),
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textMuted,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(width: 20),
 
-                  // Date Picker & Navigator
+                  // Date Picker & Navigator (Desktop)
                   if (!isMobile) ...[
                     _buildDateNavigator(dashboardState, dashboardNotifier),
                   ],
 
                   const Spacer(),
 
-                  // Action Buttons
+                  // Action Buttons (Desktop)
                   if (!isMobile) ...[
                     GlassButton(
                       text: 'Add Employee',
@@ -277,40 +298,48 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     const SizedBox(width: 12),
                   ],
 
-                  // User Profile & Logout Menu
+                  // User Profile & Settings Menu
                   PopupMenuButton<String>(
                     tooltip: 'Admin profile',
-                    color: const Color(0xFF1E1B4B),
+                    color: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
-                      side: const BorderSide(color: AppColors.glassBorderStrong),
+                      side: const BorderSide(color: AppColors.glassBorder),
                     ),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0x18FFFFFF),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: AppColors.glassBorder),
+                        boxShadow: const [AppColors.cardShadow],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const CircleAvatar(
                             radius: 12,
-                            backgroundColor: Color(0xFF6366F1),
+                            backgroundColor: Color(0xFF4F46E5),
                             child: Icon(Icons.admin_panel_settings_rounded, size: 14, color: Colors.white),
                           ),
                           const SizedBox(width: 8),
                           Text(
                             authState.user?.username ?? 'Admin',
-                            style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                           const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppColors.textMuted),
                         ],
                       ),
                     ),
                     onSelected: (val) {
-                      if (val == 'logout') {
+                      if (val == 'server_settings') {
+                        ServerSettingsDialog.show(context);
+                      } else if (val == 'logout') {
                         ref.read(authNotifierProvider.notifier).logout();
                       }
                     },
@@ -324,12 +353,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                       const PopupMenuDivider(),
                       const PopupMenuItem(
+                        value: 'server_settings',
+                        child: Row(
+                          children: [
+                            Icon(Icons.dns_rounded, size: 16, color: Color(0xFF4F46E5)),
+                            SizedBox(width: 8),
+                            Text(
+                              'Server Settings',
+                              style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textPrimary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
                         value: 'logout',
                         child: Row(
                           children: [
-                            Icon(Icons.logout_rounded, size: 16, color: AppColors.absentRoseLight),
+                            Icon(Icons.logout_rounded, size: 16, color: AppColors.absentRose),
                             SizedBox(width: 8),
-                            Text('Logout', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.absentRoseLight)),
+                            Text(
+                              'Logout',
+                              style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.absentRose),
+                            ),
                           ],
                         ),
                       ),
@@ -346,14 +391,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     Expanded(child: _buildDateNavigator(dashboardState, dashboardNotifier)),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(Icons.person_add_alt_1_rounded, color: Color(0xFF818CF8)),
-                      onPressed: () => AddEmployeeDialog.show(context),
+                      icon: const Icon(Icons.person_add_alt_1_rounded, size: 20, color: Color(0xFF4F46E5)),
+                      style: IconButton.styleFrom(
+                        backgroundColor: const Color(0xFFEEF2FF),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: const BorderSide(color: Color(0xFFC7D2FE)),
+                        ),
+                      ),
                       tooltip: 'Add Employee',
+                      onPressed: () => AddEmployeeDialog.show(context),
                     ),
+                    const SizedBox(width: 6),
                     IconButton(
-                      icon: const Icon(Icons.file_download_outlined, color: Colors.white),
-                      onPressed: () => ExportExcelDialog.show(context, dashboardState.selectedDate),
+                      icon: const Icon(Icons.file_download_outlined, size: 20, color: AppColors.textSecondary),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: const BorderSide(color: AppColors.glassBorder),
+                        ),
+                      ),
                       tooltip: 'Export Excel',
+                      onPressed: () => ExportExcelDialog.show(context, dashboardState.selectedDate),
                     ),
                   ],
                 ),
@@ -365,22 +425,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
+  // DATE NAVIGATOR CAPSULE
   Widget _buildDateNavigator(DashboardState state, DashboardNotifier notifier) {
-    final isToday = DateFormat('yyyy-MM-dd').format(state.selectedDate) ==
-        DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final now = DateTime.now();
+    final isToday = state.selectedDate.year == now.year &&
+        state.selectedDate.month == now.month &&
+        state.selectedDate.day == now.day;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       decoration: BoxDecoration(
-        color: const Color(0x18FFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.glassBorder),
+        boxShadow: const [AppColors.cardShadow],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left_rounded, size: 20, color: Colors.white),
+            icon: const Icon(Icons.chevron_left_rounded, size: 20, color: AppColors.textPrimary),
             splashRadius: 18,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
@@ -396,7 +460,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.calendar_today_rounded, size: 14, color: Color(0xFF818CF8)),
+                  const Icon(Icons.calendar_today_rounded, size: 14, color: Color(0xFF4F46E5)),
                   const SizedBox(width: 6),
                   Text(
                     state.formattedDateTitle,
@@ -404,7 +468,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       fontFamily: 'Poppins',
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -412,7 +476,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_right_rounded, size: 20, color: Colors.white),
+            icon: const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textPrimary),
             splashRadius: 18,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
@@ -428,12 +492,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withOpacity(0.3),
+                  color: const Color(0xFFEEF2FF),
                   borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFC7D2FE)),
                 ),
                 child: const Text(
                   'Today',
-                  style: TextStyle(fontFamily: 'Poppins', fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF818CF8)),
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF4F46E5),
+                  ),
                 ),
               ),
             ),
@@ -481,14 +551,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Container(
       height: 42,
       decoration: BoxDecoration(
-        color: const Color(0x14FFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.glassBorder),
+        boxShadow: const [AppColors.cardShadow],
       ),
       child: TextField(
         controller: _searchController,
         onChanged: (q) => notifier.setSearchQuery(q),
-        style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.white),
+        style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppColors.textPrimary),
         decoration: InputDecoration(
           hintText: 'Search by employee name or ID...',
           hintStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textSubtle),
@@ -503,6 +574,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 )
               : null,
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         ),
       ),
@@ -513,14 +586,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget _buildBulkActionBar(DashboardState state, DashboardNotifier notifier) {
     final count = state.selectedEmployeeIds.length;
 
-    return GlassPanel(
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      borderRadius: 12,
-      surfaceColor: const Color(0xFF1E1B4B).withOpacity(0.9),
-      borderColor: const Color(0xFF818CF8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF818CF8)),
+        boxShadow: const [AppColors.cardShadow],
+      ),
       child: Row(
         children: [
-          const Icon(Icons.checklist_rounded, color: Color(0xFF818CF8), size: 20),
+          const Icon(Icons.checklist_rounded, color: Color(0xFF4F46E5), size: 20),
           const SizedBox(width: 10),
           Text(
             '$count employees selected',
@@ -528,7 +604,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               fontFamily: 'Poppins',
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: AppColors.textPrimary,
             ),
           ),
           const Spacer(),

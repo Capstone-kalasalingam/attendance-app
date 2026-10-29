@@ -26,13 +26,20 @@ class LoadingOverlay extends StatelessWidget {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
               child: Container(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withOpacity(0.2),
                 child: Center(
                   child: GlassPanel(
                     padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
                     borderRadius: 16,
-                    surfaceColor: const Color(0x330F172A),
-                    borderColor: AppColors.glassBorderStrong,
+                    surfaceColor: Colors.white,
+                    borderColor: AppColors.glassBorder,
+                    shadows: const [
+                      BoxShadow(
+                        color: Color(0x1F000000),
+                        blurRadius: 20,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -41,7 +48,7 @@ class LoadingOverlay extends StatelessWidget {
                           height: 36,
                           child: CircularProgressIndicator(
                             strokeWidth: 3,
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF818CF8)),
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4F46E5)),
                           ),
                         ),
                         if (message != null) ...[
@@ -92,55 +99,57 @@ class EmptyStateWidget extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
           child: GlassPanel(
-          borderRadius: 20,
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0x226366F1),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0x44818CF8)),
+            borderRadius: 20,
+            surfaceColor: Colors.white,
+            borderColor: AppColors.glassBorder,
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEF2FF),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFC7D2FE)),
+                  ),
+                  child: Icon(icon, size: 36, color: const Color(0xFF4F46E5)),
                 ),
-                child: Icon(icon, size: 36, color: const Color(0xFF818CF8)),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                description,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 12,
-                  color: AppColors.textMuted,
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              if (onAction != null && actionLabel != null) ...[
-                const SizedBox(height: 20),
-                GlassButton(
-                  text: actionLabel!,
-                  onPressed: onAction,
-                  variant: GlassButtonVariant.primary,
-                ),
+                if (onAction != null && actionLabel != null) ...[
+                  const SizedBox(height: 20),
+                  GlassButton(
+                    text: actionLabel!,
+                    onPressed: onAction,
+                    variant: GlassButtonVariant.primary,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }
 
@@ -162,53 +171,53 @@ class ErrorStateWidget extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: GlassPanel(
-          borderRadius: 20,
-          borderColor: AppColors.absentRose.withOpacity(0.4),
-          surfaceColor: const Color(0x221E1B4B),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.absentRose.withOpacity(0.2),
-                  shape: BoxShape.circle,
+            borderRadius: 20,
+            borderColor: AppColors.absentBorder,
+            surfaceColor: Colors.white,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.absentBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.error_outline_rounded, size: 32, color: AppColors.absentRose),
                 ),
-                child: const Icon(Icons.error_outline_rounded, size: 32, color: AppColors.absentRose),
-              ),
-              const SizedBox(height: 14),
-              const Text(
-                'Something went wrong',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                const SizedBox(height: 14),
+                const Text(
+                  'Something went wrong',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                message,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
+                const SizedBox(height: 6),
+                Text(
+                  message,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 18),
-              GlassButton(
-                text: 'Retry',
-                icon: Icons.refresh_rounded,
-                onPressed: onRetry,
-                variant: GlassButtonVariant.secondary,
-              ),
-            ],
+                const SizedBox(height: 18),
+                GlassButton(
+                  text: 'Retry',
+                  icon: Icons.refresh_rounded,
+                  onPressed: onRetry,
+                  variant: GlassButtonVariant.secondary,
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }

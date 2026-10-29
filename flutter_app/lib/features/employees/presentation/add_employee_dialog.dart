@@ -69,7 +69,7 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Employee "${_nameController.text}" added successfully!'),
-            backgroundColor: AppColors.presentEmerald.withOpacity(0.9),
+            backgroundColor: AppColors.presentEmerald,
           ),
         );
       }
@@ -96,13 +96,13 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: AppColors.absentRose.withOpacity(0.2),
+                color: AppColors.absentBg,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.absentRoseLight.withOpacity(0.4)),
+                border: Border.all(color: AppColors.absentBorder),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline_rounded, size: 18, color: AppColors.absentRoseLight),
+                  const Icon(Icons.error_outline_rounded, size: 18, color: AppColors.absentRose),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -110,7 +110,7 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 12,
-                        color: AppColors.absentRoseLight,
+                        color: AppColors.absentRose,
                       ),
                     ),
                   ),
@@ -192,13 +192,13 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: _defaultShift == 'morning'
-                          ? AppColors.morningAmber.withOpacity(0.25)
-                          : const Color(0x12FFFFFF),
+                          ? AppColors.morningAmberBg
+                          : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: _defaultShift == 'morning'
-                            ? AppColors.morningAmber
-                            : const Color(0x20FFFFFF),
+                            ? AppColors.morningAmberBorder
+                            : AppColors.glassBorder,
                       ),
                     ),
                     child: Row(
@@ -210,7 +210,15 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
                           color: _defaultShift == 'morning' ? AppColors.morningAmber : AppColors.textMuted,
                         ),
                         const SizedBox(width: 6),
-                        const Text('Morning Shift', style: TextStyle(fontFamily: 'Poppins', fontSize: 12)),
+                        Text(
+                          'Morning Shift',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: _defaultShift == 'morning' ? FontWeight.w600 : FontWeight.w500,
+                            color: _defaultShift == 'morning' ? AppColors.morningAmber : AppColors.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -225,13 +233,13 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: _defaultShift == 'night'
-                          ? AppColors.nightViolet.withOpacity(0.25)
-                          : const Color(0x12FFFFFF),
+                          ? AppColors.nightVioletBg
+                          : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: _defaultShift == 'night'
-                            ? AppColors.nightViolet
-                            : const Color(0x20FFFFFF),
+                            ? AppColors.nightVioletBorder
+                            : AppColors.glassBorder,
                       ),
                     ),
                     child: Row(
@@ -243,7 +251,15 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
                           color: _defaultShift == 'night' ? AppColors.nightViolet : AppColors.textMuted,
                         ),
                         const SizedBox(width: 6),
-                        const Text('Night Shift', style: TextStyle(fontFamily: 'Poppins', fontSize: 12)),
+                        Text(
+                          'Night Shift',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: _defaultShift == 'night' ? FontWeight.w600 : FontWeight.w500,
+                            color: _defaultShift == 'night' ? AppColors.nightViolet : AppColors.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
                   ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/models/attendance_model.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_button.dart';
@@ -9,16 +8,40 @@ import '../../../../core/widgets/glass_text_field.dart';
 import '../providers/employee_provider.dart';
 
 class EditEmployeeDialog extends ConsumerStatefulWidget {
-  final AttendanceRowModel row;
+  final String employeeId;
+  final String code;
+  final String name;
+  final String defaultShift;
+  final String? designation;
 
-  const EditEmployeeDialog({super.key, required this.row});
+  const EditEmployeeDialog({
+    super.key,
+    required this.employeeId,
+    required this.code,
+    required this.name,
+    required this.defaultShift,
+    this.designation,
+  });
 
-  static Future<void> show(BuildContext context, AttendanceRowModel row) {
+  static Future<void> show(
+    BuildContext context, {
+    required String employeeId,
+    required String code,
+    required String name,
+    required String defaultShift,
+    String? designation,
+  }) {
     return GlassDialog.show(
       context: context,
-      title: 'Edit Employee — ${row.fullName}',
+      title: 'Edit Employee — $name',
       titleIcon: Icons.manage_accounts_rounded,
-      content: EditEmployeeDialog(row: row),
+      content: EditEmployeeDialog(
+        employeeId: employeeId,
+        code: code,
+        name: name,
+        defaultShift: defaultShift,
+        designation: designation,
+      ),
     );
   }
 
@@ -40,11 +63,11 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.row.fullName);
+    _nameController = TextEditingController(text: widget.name);
     _phoneController = TextEditingController();
-    _designationController = TextEditingController(text: widget.row.designation ?? '');
+    _designationController = TextEditingController(text: widget.designation ?? '');
     _notesController = TextEditingController();
-    _defaultShift = widget.row.defaultShift;
+    _defaultShift = widget.defaultShift;
   }
 
   @override
@@ -67,7 +90,7 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
     try {
       final service = ref.read(employeeServiceProvider);
       await service.updateEmployee(
-        id: widget.row.employeeId,
+        id: widget.employeeId,
         name: _nameController.text,
         phone: _phoneController.text,
         designation: _designationController.text,
@@ -80,7 +103,7 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Employee "${_nameController.text}" updated successfully!'),
-            backgroundColor: AppColors.presentEmerald.withOpacity(0.9),
+            backgroundColor: AppColors.presentEmerald,
           ),
         );
       }
@@ -98,11 +121,18 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1B4B),
-        title: const Text('Deactivate Employee?', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.glassBorder),
+        ),
+        title: const Text(
+          'Deactivate Employee?',
+          style: TextStyle(color: AppColors.textPrimary, fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+        ),
         content: Text(
-          'Deactivating "${widget.row.fullName}" will hide them from future attendance lists while preserving all historical records.',
-          style: const TextStyle(color: AppColors.textSecondary),
+          'Deactivating "${widget.name}" will hide them from future attendance lists while preserving all historical records.',
+          style: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins'),
         ),
         actions: [
           TextButton(
@@ -121,7 +151,7 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
     if (confirmed == true) {
       try {
         final service = ref.read(employeeServiceProvider);
-        await service.setEmployeeStatus(id: widget.row.employeeId, isActive: false);
+        await service.setEmployeeStatus(id: widget.employeeId, isActive: false);
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
@@ -149,13 +179,13 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: AppColors.absentRose.withOpacity(0.2),
+                color: AppColors.absentBg,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.absentRoseLight.withOpacity(0.4)),
+                border: Border.all(color: AppColors.absentBorder),
               ),
               child: Text(
                 _errorMessage!,
-                style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.absentRoseLight),
+                style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.absentRose),
               ),
             ),
           ],
@@ -192,7 +222,12 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
 
           const Text(
             'Default Shift',
-            style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textSecondary),
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 6),
           Row(
@@ -205,15 +240,23 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: _defaultShift == 'morning'
-                          ? AppColors.morningAmber.withOpacity(0.25)
-                          : const Color(0x12FFFFFF),
+                          ? AppColors.morningAmberBg
+                          : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: _defaultShift == 'morning' ? AppColors.morningAmber : const Color(0x20FFFFFF),
+                        color: _defaultShift == 'morning' ? AppColors.morningAmberBorder : AppColors.glassBorder,
                       ),
                     ),
-                    child: const Center(
-                      child: Text('Morning Shift', style: TextStyle(fontFamily: 'Poppins', fontSize: 12)),
+                    child: Center(
+                      child: Text(
+                        'Morning Shift',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                          fontWeight: _defaultShift == 'morning' ? FontWeight.w600 : FontWeight.w500,
+                          color: _defaultShift == 'morning' ? AppColors.morningAmber : AppColors.textSecondary,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -227,15 +270,23 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: _defaultShift == 'night'
-                          ? AppColors.nightViolet.withOpacity(0.25)
-                          : const Color(0x12FFFFFF),
+                          ? AppColors.nightVioletBg
+                          : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: _defaultShift == 'night' ? AppColors.nightViolet : const Color(0x20FFFFFF),
+                        color: _defaultShift == 'night' ? AppColors.nightVioletBorder : AppColors.glassBorder,
                       ),
                     ),
-                    child: const Center(
-                      child: Text('Night Shift', style: TextStyle(fontFamily: 'Poppins', fontSize: 12)),
+                    child: Center(
+                      child: Text(
+                        'Night Shift',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                          fontWeight: _defaultShift == 'night' ? FontWeight.w600 : FontWeight.w500,
+                          color: _defaultShift == 'night' ? AppColors.nightViolet : AppColors.textSecondary,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -249,8 +300,8 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
             children: [
               TextButton.icon(
                 onPressed: _deactivate,
-                icon: const Icon(Icons.person_off_rounded, size: 16, color: AppColors.absentRoseLight),
-                label: const Text('Deactivate', style: TextStyle(color: AppColors.absentRoseLight, fontSize: 12)),
+                icon: const Icon(Icons.person_off_rounded, size: 16, color: AppColors.absentRose),
+                label: const Text('Deactivate', style: TextStyle(color: AppColors.absentRose, fontSize: 12)),
               ),
               const Spacer(),
               GlassButton(

@@ -41,18 +41,8 @@ class GlassPanel extends StatelessWidget {
       height: height,
       padding: padding ?? const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: gradient == null ? (surfaceColor ?? AppColors.glassSurface) : null,
-        gradient: gradient ??
-            (surfaceColor == null
-                ? const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0x22FFFFFF),
-                      Color(0x0CFFFFFF),
-                    ],
-                  )
-                : null),
+        color: surfaceColor ?? Colors.white,
+        gradient: gradient,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
           color: borderColor ?? AppColors.glassBorder,
@@ -81,16 +71,14 @@ class GlassPanel extends StatelessWidget {
       ),
     );
 
-    if (shadows != null || margin != null) {
-      glass = Container(
-        margin: margin,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(borderRadius),
-          boxShadow: shadows ?? [AppColors.glassShadow],
-        ),
-        child: glass,
-      );
-    }
+    glass = Container(
+      margin: margin,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        boxShadow: shadows ?? const [AppColors.cardShadow],
+      ),
+      child: glass,
+    );
 
     return glass;
   }

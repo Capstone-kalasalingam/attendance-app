@@ -7,12 +7,17 @@ import 'endpoints.dart';
 class ApiClient {
   late final Dio dio;
   final TokenManager tokenManager;
+  final String baseUrl;
   void Function()? onSessionExpired;
 
-  ApiClient({required this.tokenManager, this.onSessionExpired}) {
+  ApiClient({
+    required this.tokenManager,
+    String? baseUrl,
+    this.onSessionExpired,
+  }) : baseUrl = baseUrl ?? AppConfig.apiBaseUrl {
     dio = Dio(
       BaseOptions(
-        baseUrl: AppConfig.apiBaseUrl,
+        baseUrl: this.baseUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 30),
         headers: {
@@ -37,7 +42,7 @@ class ApiClient {
             final refreshToken = await tokenManager.getRefreshToken();
             if (refreshToken != null && refreshToken.isNotEmpty) {
               try {
-                final refreshDio = Dio(BaseOptions(baseUrl: AppConfig.apiBaseUrl));
+                final refreshDio = Dio(BaseOptions(baseUrl: this.baseUrl));
                 final refreshResponse = await refreshDio.post(
                   Endpoints.refresh,
                   data: {'refresh_token': refreshToken},
@@ -89,7 +94,10 @@ class ApiClient {
         return 'Connection timed out. Please check server availability.';
       }
       if (error.type == DioExceptionType.connectionError) {
-        return 'Cannot connect to backend server at ${error.requestOptions.baseUrl}.';
+        final host = error.requestOptions.baseUrl.isNotEmpty
+            ? error.requestOptions.baseUrl
+            : 'backend server';
+        return 'Cannot connect to $host. Please check your network connection or server settings.';
       }
       return error.message ?? 'An unexpected network error occurred.';
     }

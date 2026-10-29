@@ -50,12 +50,12 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
       lastDate: DateTime(2030),
       builder: (context, child) {
         return Theme(
-          data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF6366F1),
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF4F46E5),
               onPrimary: Colors.white,
-              surface: Color(0xFF1E1B4B),
-              onSurface: Colors.white,
+              surface: Colors.white,
+              onSurface: AppColors.textPrimary,
             ),
           ),
           child: child!,
@@ -119,7 +119,12 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
         // Date Range Selector Pill
         const Text(
           'Date Period',
-          style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
         ),
         const SizedBox(height: 6),
         InkWell(
@@ -128,18 +133,24 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0x18FFFFFF),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.glassBorderStrong),
+              border: Border.all(color: AppColors.glassBorder),
+              boxShadow: const [AppColors.cardShadow],
             ),
             child: Row(
               children: [
-                const Icon(Icons.date_range_rounded, size: 18, color: Color(0xFF818CF8)),
+                const Icon(Icons.date_range_rounded, size: 18, color: Color(0xFF4F46E5)),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     dateRangeText,
-                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white),
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
                 const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textMuted),
@@ -185,12 +196,15 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Shift Filter', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textSecondary)),
+                  const Text(
+                    'Shift Filter',
+                    style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textSecondary),
+                  ),
                   const SizedBox(height: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
-                      color: const Color(0x14FFFFFF),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: AppColors.glassBorder),
                     ),
@@ -198,11 +212,11 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
                       child: DropdownButton<String>(
                         value: _selectedShift,
                         isExpanded: true,
-                        dropdownColor: const Color(0xFF1E1B4B),
+                        dropdownColor: Colors.white,
                         items: const [
-                          DropdownMenuItem(value: 'all', child: Text('All Shifts', style: TextStyle(fontFamily: 'Poppins', fontSize: 12))),
-                          DropdownMenuItem(value: 'morning', child: Text('Morning Shift', style: TextStyle(fontFamily: 'Poppins', fontSize: 12))),
-                          DropdownMenuItem(value: 'night', child: Text('Night Shift', style: TextStyle(fontFamily: 'Poppins', fontSize: 12))),
+                          DropdownMenuItem(value: 'all', child: Text('All Shifts', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textPrimary))),
+                          DropdownMenuItem(value: 'morning', child: Text('Morning Shift', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textPrimary))),
+                          DropdownMenuItem(value: 'night', child: Text('Night Shift', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textPrimary))),
                         ],
                         onChanged: (v) => setState(() => _selectedShift = v!),
                       ),
@@ -216,12 +230,15 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Status Filter', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textSecondary)),
+                  const Text(
+                    'Status Filter',
+                    style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textSecondary),
+                  ),
                   const SizedBox(height: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
-                      color: const Color(0x14FFFFFF),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: AppColors.glassBorder),
                     ),
@@ -229,11 +246,11 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
                       child: DropdownButton<String>(
                         value: _selectedStatus,
                         isExpanded: true,
-                        dropdownColor: const Color(0xFF1E1B4B),
+                        dropdownColor: Colors.white,
                         items: const [
-                          DropdownMenuItem(value: 'all', child: Text('All Statuses', style: TextStyle(fontFamily: 'Poppins', fontSize: 12))),
-                          DropdownMenuItem(value: 'present', child: Text('Present Only', style: TextStyle(fontFamily: 'Poppins', fontSize: 12))),
-                          DropdownMenuItem(value: 'absent', child: Text('Absent Only', style: TextStyle(fontFamily: 'Poppins', fontSize: 12))),
+                          DropdownMenuItem(value: 'all', child: Text('All Statuses', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textPrimary))),
+                          DropdownMenuItem(value: 'present', child: Text('Present Only', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textPrimary))),
+                          DropdownMenuItem(value: 'absent', child: Text('Absent Only', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppColors.textPrimary))),
                         ],
                         onChanged: (v) => setState(() => _selectedStatus = v!),
                       ),
@@ -250,21 +267,21 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0x10FFFFFF),
+            color: const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0x16FFFFFF)),
+            border: Border.all(color: AppColors.glassBorder),
           ),
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Includes 3 Structured Sheets:',
-                style: TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF818CF8)),
+                style: TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF4F46E5)),
               ),
               SizedBox(height: 4),
-              Text('• Sheet 1: Detailed records with tasks & hours', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: AppColors.textMuted)),
-              Text('• Sheet 2: Daily Headcount & Completion %', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: AppColors.textMuted)),
-              Text('• Sheet 3: Employee Aggregate Summary', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: AppColors.textMuted)),
+              Text('• Sheet 1: Detailed records with tasks & hours', style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: AppColors.textMuted)),
+              Text('• Sheet 2: Daily Headcount & Completion %', style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: AppColors.textMuted)),
+              Text('• Sheet 3: Employee Aggregate Summary', style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: AppColors.textMuted)),
             ],
           ),
         ),
@@ -275,21 +292,17 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: _isSuccess
-                  ? AppColors.presentEmerald.withOpacity(0.18)
-                  : AppColors.absentRose.withOpacity(0.18),
+              color: _isSuccess ? AppColors.presentBg : AppColors.absentBg,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: _isSuccess
-                    ? AppColors.presentEmeraldLight.withOpacity(0.4)
-                    : AppColors.absentRoseLight.withOpacity(0.4),
+                color: _isSuccess ? AppColors.presentBorder : AppColors.absentBorder,
               ),
             ),
             child: Row(
               children: [
                 Icon(
                   _isSuccess ? Icons.check_circle_outline_rounded : Icons.error_outline_rounded,
-                  color: _isSuccess ? AppColors.presentEmeraldLight : AppColors.absentRoseLight,
+                  color: _isSuccess ? AppColors.presentEmerald : AppColors.absentRose,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -299,7 +312,7 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 11,
-                      color: _isSuccess ? AppColors.presentEmeraldLight : AppColors.absentRoseLight,
+                      color: _isSuccess ? AppColors.presentEmerald : AppColors.absentRose,
                     ),
                   ),
                 ),
@@ -340,8 +353,9 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: const Color(0x18FFFFFF),
+          color: const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.glassBorder),
         ),
         child: Text(
           label,

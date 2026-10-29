@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/glass_button.dart';
 import '../../../core/widgets/glass_panel.dart';
 import '../../../core/widgets/glass_text_field.dart';
+import '../../../core/widgets/server_settings_dialog.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -43,8 +44,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
+    final activeBaseUrl = ref.watch(apiBaseUrlProvider);
+
+    final displayHost = activeBaseUrl
+        .replaceFirst('http://', '')
+        .replaceFirst('https://', '');
 
     return Scaffold(
+      backgroundColor: AppColors.bgLight,
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppColors.mainBackgroundGradient,
@@ -57,10 +64,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 constraints: const BoxConstraints(maxWidth: 440),
                 child: GlassPanel(
                   borderRadius: 24,
-                  blur: 24,
-                  surfaceColor: const Color(0x240F172A),
-                  borderColor: AppColors.glassBorderStrong,
-                  borderWidth: 1.2,
+                  surfaceColor: Colors.white,
+                  borderColor: AppColors.glassBorder,
+                  shadows: const [
+                    BoxShadow(
+                      color: Color(0x12000000),
+                      blurRadius: 24,
+                      spreadRadius: 2,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
                   padding: const EdgeInsets.all(32),
                   child: Form(
                     key: _formKey,
@@ -68,6 +81,60 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        // Server Connection Status Pill
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: InkWell(
+                            onTap: () => ServerSettingsDialog.show(context),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: AppColors.glassBorder),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 7,
+                                    height: 7,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.presentEmerald,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.presentEmerald,
+                                          blurRadius: 4,
+                                          spreadRadius: 1,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  ConstrainedBox(
+                                    constraints: const BoxConstraints(maxWidth: 170),
+                                    child: Text(
+                                      displayHost,
+                                      style: const TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 10,
+                                        color: AppColors.textMuted,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Icon(Icons.settings_outlined, size: 12, color: AppColors.textMuted),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
                         // App Brand Logo / Icon
                         Center(
                           child: Container(
@@ -85,7 +152,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 18),
 
                         // Title
                         const Text(
@@ -117,17 +184,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             decoration: BoxDecoration(
-                              color: AppColors.absentRose.withOpacity(0.18),
+                              color: AppColors.absentBg,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppColors.absentRose.withOpacity(0.4),
+                                color: AppColors.absentBorder,
                                 width: 1,
                               ),
                             ),
                             child: Row(
                               children: [
                                 const Icon(Icons.error_outline_rounded,
-                                    color: AppColors.absentRoseLight, size: 20),
+                                    color: AppColors.absentRose, size: 20),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
@@ -136,7 +203,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       fontFamily: 'Poppins',
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
-                                      color: AppColors.absentRoseLight,
+                                      color: AppColors.absentRose,
                                     ),
                                   ),
                                 ),
@@ -207,14 +274,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Center(
                           child: TextButton.icon(
                             onPressed: _fillDemoCredentials,
-                            icon: const Icon(Icons.flash_on_rounded, size: 16, color: Color(0xFF818CF8)),
+                            icon: const Icon(Icons.flash_on_rounded, size: 16, color: Color(0xFF4F46E5)),
                             label: const Text(
                               'Use Admin Credentials (admin / Admin@123456)',
                               style: TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF818CF8),
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF4F46E5),
                               ),
                             ),
                           ),

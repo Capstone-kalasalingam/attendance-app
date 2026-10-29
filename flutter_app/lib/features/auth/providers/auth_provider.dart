@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/auth/token_manager.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/endpoints.dart';
@@ -34,11 +37,61 @@ class AuthState {
   }
 }
 
+class ApiBaseUrlNotifier extends StateNotifier<String> {
+  ApiBaseUrlNotifier() : super(AppConfig.apiBaseUrl) {
+    _loadPersistedUrl();
+  }
+
+  Future<void> _loadPersistedUrl() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedUrl = prefs.getString(AppConfig.storageKeyServerUrl);
+      if (savedUrl != null && savedUrl.trim().isNotEmpty) {
+        final cleaned = AppConfig.cleanUrl(savedUrl);
+        AppConfig.setActiveBaseUrl(cleaned);
+        state = cleaned;
+      }
+    } catch (e) {
+      debugPrint('Could not load saved server URL: $e');
+    }
+  }
+
+  Future<void> setBaseUrl(String newUrl) async {
+    final cleaned = AppConfig.cleanUrl(newUrl);
+    AppConfig.setActiveBaseUrl(cleaned);
+    state = cleaned;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(AppConfig.storageKeyServerUrl, cleaned);
+    } catch (e) {
+      debugPrint('Could not save custom server URL: $e');
+    }
+  }
+
+  Future<void> resetToDefault() async {
+    AppConfig.setActiveBaseUrl(AppConfig.defaultApiBaseUrl);
+    state = AppConfig.defaultApiBaseUrl;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(AppConfig.storageKeyServerUrl);
+    } catch (e) {
+      debugPrint('Could not remove custom server URL: $e');
+    }
+  }
+}
+
+final apiBaseUrlProvider = StateNotifierProvider<ApiBaseUrlNotifier, String>((ref) {
+  return ApiBaseUrlNotifier();
+});
+
 final tokenManagerProvider = Provider<TokenManager>((ref) => TokenManager());
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final tokenManager = ref.watch(tokenManagerProvider);
-  return ApiClient(tokenManager: tokenManager);
+  final baseUrl = ref.watch(apiBaseUrlProvider);
+  return ApiClient(tokenManager: tokenManager, baseUrl: baseUrl);
 });
 
 final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {

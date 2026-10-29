@@ -23,7 +23,7 @@ class GlassButton extends StatelessWidget {
     this.isLoading = false,
     this.variant = GlassButtonVariant.primary,
     this.width,
-    this.height = 46,
+    this.height = 44,
     this.borderRadius = 12,
     this.padding,
   });
@@ -39,23 +39,23 @@ class GlassButton extends StatelessWidget {
       case GlassButtonVariant.primary:
         gradient = AppColors.accentButtonGradient;
         surfaceColor = const Color(0xFF4F46E5);
-        borderColor = const Color(0x66818CF8);
+        borderColor = const Color(0xFF4F46E5);
         textColor = Colors.white;
         break;
       case GlassButtonVariant.secondary:
-        surfaceColor = AppColors.glassSurface;
+        surfaceColor = Colors.white;
         borderColor = AppColors.glassBorderStrong;
         textColor = AppColors.textPrimary;
         break;
       case GlassButtonVariant.success:
-        surfaceColor = AppColors.presentEmerald.withOpacity(0.25);
-        borderColor = AppColors.presentEmeraldLight.withOpacity(0.5);
-        textColor = AppColors.presentEmeraldLight;
+        surfaceColor = AppColors.presentBg;
+        borderColor = AppColors.presentBorder;
+        textColor = AppColors.presentEmerald;
         break;
       case GlassButtonVariant.danger:
-        surfaceColor = AppColors.absentRose.withOpacity(0.25);
-        borderColor = AppColors.absentRoseLight.withOpacity(0.5);
-        textColor = AppColors.absentRoseLight;
+        surfaceColor = AppColors.absentBg;
+        borderColor = AppColors.absentBorder;
+        textColor = AppColors.absentRose;
         break;
       case GlassButtonVariant.ghost:
         surfaceColor = Colors.transparent;
@@ -75,16 +75,21 @@ class GlassButton extends StatelessWidget {
         surfaceColor: gradient == null ? surfaceColor : null,
         gradient: gradient,
         borderColor: borderColor,
+        shadows: variant == GlassButtonVariant.primary
+            ? const [AppColors.softGlow]
+            : const [AppColors.cardShadow],
         padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
         onTap: isEnabled ? onPressed : null,
         child: Center(
           child: isLoading
-              ? const SizedBox(
+              ? SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      variant == GlassButtonVariant.primary ? Colors.white : const Color(0xFF4F46E5),
+                    ),
                   ),
                 )
               : Row(
@@ -102,7 +107,7 @@ class GlassButton extends StatelessWidget {
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: textColor,
-                        letterSpacing: 0.2,
+                        letterSpacing: 0.1,
                       ),
                     ),
                   ],
