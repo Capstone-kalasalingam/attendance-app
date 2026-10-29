@@ -3,10 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: attendance_backend
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8088}:8080"
+    expose:
+      - "8080"
     environment:
       - PORT=8080
       - DATABASE_URL=postgres://postgres:1gEQpVj8P8SEtxrbh4H7wmbhsqiqQbpDRIW6V6tWQUqUYJm18beRewqdfCUQOzD1@103.185.75.206:5433/postgres?sslmode=require
