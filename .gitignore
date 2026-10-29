@@ -1,0 +1,50 @@
+# Environment files
+.env
+!.env.example
+backend/.env
+!backend/.env.example
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Go
+backend/server
+backend/migrate
+backend/seed
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+
+# Flutter / Dart
+flutter_app/.dart_tool/
+flutter_app/.flutter-plugins
+flutter_app/.flutter-plugins-dependencies
+flutter_app/.packages
+flutter_app/.pub-cache/
+flutter_app/.pub/
+flutter_app/build/
+flutter_app/android/.gradle/
+flutter_app/android/local.properties
+flutter_app/ios/Pods/
+flutter_app/ios/.symlinks/
+flutter_app/ios/Flutter/Flutter.framework
+flutter_app/ios/Flutter/Flutter.podspec
+flutter_app/ios/Flutter/Generated.xcconfig
+flutter_app/ios/Flutter/app.framework
+flutter_app/macos/Pods/
+flutter_app/macos/Flutter/ephemeral
+flutter_app/windows/flutter/ephemeral
+flutter_app/linux/flutter/ephemeral
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo

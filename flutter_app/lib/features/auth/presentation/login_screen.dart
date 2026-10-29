@@ -1,0 +1,233 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/glass_button.dart';
+import '../../../core/widgets/glass_panel.dart';
+import '../../../core/widgets/glass_text_field.dart';
+import '../providers/auth_provider.dart';
+
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _submitLogin() {
+    if (_formKey.currentState?.validate() ?? false) {
+      ref.read(authNotifierProvider.notifier).login(
+            _usernameController.text,
+            _passwordController.text,
+          );
+    }
+  }
+
+  void _fillDemoCredentials() {
+    _usernameController.text = 'admin';
+    _passwordController.text = 'Admin@123456';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authNotifierProvider);
+
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppColors.mainBackgroundGradient,
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: GlassPanel(
+                  borderRadius: 24,
+                  blur: 24,
+                  surfaceColor: const Color(0x240F172A),
+                  borderColor: AppColors.glassBorderStrong,
+                  borderWidth: 1.2,
+                  padding: const EdgeInsets.all(32),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // App Brand Logo / Icon
+                        Center(
+                          child: Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              gradient: AppColors.accentButtonGradient,
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: const [AppColors.softGlow],
+                            ),
+                            child: const Icon(
+                              Icons.access_time_filled_rounded,
+                              size: 32,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Title
+                        const Text(
+                          'Attendance Portal',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.4,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Administrator Access & Shift Management',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textMuted,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 28),
+
+                        // Error Banner if present
+                        if (authState.errorMessage != null) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: AppColors.absentRose.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppColors.absentRose.withOpacity(0.4),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline_rounded,
+                                    color: AppColors.absentRoseLight, size: 20),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    authState.errorMessage!,
+                                    style: const TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.absentRoseLight,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+
+                        // Username Field
+                        GlassTextField(
+                          controller: _usernameController,
+                          labelText: 'Username or Email',
+                          hintText: 'Enter username',
+                          prefixIcon: Icons.person_outline_rounded,
+                          validator: (val) {
+                            if (val == null || val.trim().isEmpty) {
+                              return 'Username is required';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 18),
+
+                        // Password Field
+                        GlassTextField(
+                          controller: _passwordController,
+                          labelText: 'Password',
+                          hintText: 'Enter password',
+                          prefixIcon: Icons.lock_outline_rounded,
+                          obscureText: _obscurePassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: AppColors.textMuted,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
+                          onSubmitted: (_) => _submitLogin(),
+                          validator: (val) {
+                            if (val == null || val.isEmpty) {
+                              return 'Password is required';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 28),
+
+                        // Submit Button
+                        GlassButton(
+                          text: 'Sign In',
+                          icon: Icons.login_rounded,
+                          height: 48,
+                          isLoading: authState.isLoading,
+                          onPressed: _submitLogin,
+                          variant: GlassButtonVariant.primary,
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Quick Demo Credentials Helper
+                        Center(
+                          child: TextButton.icon(
+                            onPressed: _fillDemoCredentials,
+                            icon: const Icon(Icons.flash_on_rounded, size: 16, color: Color(0xFF818CF8)),
+                            label: const Text(
+                              'Use Admin Credentials (admin / Admin@123456)',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF818CF8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

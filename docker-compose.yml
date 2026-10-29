@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: attendance_backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DATABASE_URL=postgres://postgres:1gEQpVj8P8SEtxrbh4H7wmbhsqiqQbpDRIW6V6tWQUqUYJm18beRewqdfCUQOzD1@103.185.75.206:5433/postgres?sslmode=require
+      - JWT_SECRET=super-secret-glassmorphic-attendance-jwt-key-2026-production
+      - JWT_EXPIRY_HOURS=24
+      - REFRESH_TOKEN_EXPIRY_DAYS=7
+      - DEFAULT_TIMEZONE=Asia/Kolkata
+      - ENVIRONMENT=production
+      - ADMIN_BOOTSTRAP_USER=admin
+      - ADMIN_BOOTSTRAP_PASS=Admin@123456
+      - RATE_LIMIT_PER_MINUTE=120
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
