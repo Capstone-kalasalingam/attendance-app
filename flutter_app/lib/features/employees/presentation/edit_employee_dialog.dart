@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/models/attendance_model.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_button.dart';
@@ -8,40 +9,19 @@ import '../../../../core/widgets/glass_text_field.dart';
 import '../providers/employee_provider.dart';
 
 class EditEmployeeDialog extends ConsumerStatefulWidget {
-  final String employeeId;
-  final String code;
-  final String name;
-  final String defaultShift;
-  final String? designation;
+  final AttendanceRowModel row;
 
   const EditEmployeeDialog({
     super.key,
-    required this.employeeId,
-    required this.code,
-    required this.name,
-    required this.defaultShift,
-    this.designation,
+    required this.row,
   });
 
-  static Future<void> show(
-    BuildContext context, {
-    required String employeeId,
-    required String code,
-    required String name,
-    required String defaultShift,
-    String? designation,
-  }) {
+  static Future<void> show(BuildContext context, AttendanceRowModel row) {
     return GlassDialog.show(
       context: context,
-      title: 'Edit Employee — $name',
+      title: 'Edit Employee — ${row.fullName}',
       titleIcon: Icons.manage_accounts_rounded,
-      content: EditEmployeeDialog(
-        employeeId: employeeId,
-        code: code,
-        name: name,
-        defaultShift: defaultShift,
-        designation: designation,
-      ),
+      content: EditEmployeeDialog(row: row),
     );
   }
 
@@ -63,11 +43,11 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.name);
+    _nameController = TextEditingController(text: widget.row.fullName);
     _phoneController = TextEditingController();
-    _designationController = TextEditingController(text: widget.designation ?? '');
+    _designationController = TextEditingController(text: widget.row.designation ?? '');
     _notesController = TextEditingController();
-    _defaultShift = widget.defaultShift;
+    _defaultShift = widget.row.defaultShift;
   }
 
   @override
@@ -90,7 +70,7 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
     try {
       final service = ref.read(employeeServiceProvider);
       await service.updateEmployee(
-        id: widget.employeeId,
+        id: widget.row.employeeId,
         name: _nameController.text,
         phone: _phoneController.text,
         designation: _designationController.text,
@@ -131,7 +111,7 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
           style: TextStyle(color: AppColors.textPrimary, fontFamily: 'Poppins', fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'Deactivating "${widget.name}" will hide them from future attendance lists while preserving all historical records.',
+          'Deactivating "${widget.row.fullName}" will hide them from future attendance lists while preserving all historical records.',
           style: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins'),
         ),
         actions: [
@@ -151,7 +131,7 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
     if (confirmed == true) {
       try {
         final service = ref.read(employeeServiceProvider);
-        await service.setEmployeeStatus(id: widget.employeeId, isActive: false);
+        await service.setEmployeeStatus(id: widget.row.employeeId, isActive: false);
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(

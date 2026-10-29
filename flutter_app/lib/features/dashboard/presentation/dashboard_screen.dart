@@ -190,15 +190,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 onStatusChanged: (status) => dashboardNotifier.markStatus(row.employeeId, status),
                                 onShiftChanged: (shift) => dashboardNotifier.changeShift(row.employeeId, shift),
                                 onHoursChanged: (hours) => dashboardNotifier.updateHours(row.employeeId, hours),
-                                onDescriptionChanged: (desc) => dashboardNotifier.updateDescription(row.employeeId, desc),
-                                onEditEmployee: () => EditEmployeeDialog.show(
-                                  context,
-                                  employeeId: row.employeeId,
-                                  code: row.employeeCode,
-                                  name: row.fullName,
-                                  defaultShift: row.defaultShift,
-                                  designation: row.designation,
-                                ),
+                                onDescriptionChanged: (desc) => dashboardNotifier.updateWorkDescription(row.employeeId, desc),
+                                onEditEmployee: () => EditEmployeeDialog.show(context, row),
                               );
                             },
                           ),
