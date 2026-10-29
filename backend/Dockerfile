@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for Go backend
+# Standalone Dockerfile for Go backend
 FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
@@ -19,7 +19,7 @@ FROM alpine:3.20
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata wget
 
 COPY --from=builder /app/server /app/server
 COPY --from=builder /app/migrate /app/migrate
@@ -31,5 +31,8 @@ ENV ENVIRONMENT=production
 ENV DEFAULT_TIMEZONE=Asia/Kolkata
 
 EXPOSE 8080
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget -qO- http://localhost:8080/health || exit 1
 
 CMD ["/app/server"]
