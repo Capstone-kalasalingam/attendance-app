@@ -266,6 +266,7 @@ func SetupRouter(
 			attGroup.PUT("/:employeeId/:date/:shift", attHandler.PutAttendance)
 			attGroup.POST("/bulk", attHandler.BulkAttendance)
 			attGroup.GET("/history", attHandler.GetHistory)
+			attGroup.GET("/payroll", attHandler.GetPayrollOverview)
 		}
 
 		// Exports

@@ -29,6 +29,8 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _designationController = TextEditingController();
+  final _morningRateController = TextEditingController(text: '0.00');
+  final _nightRateController = TextEditingController(text: '0.00');
   final _notesController = TextEditingController();
 
   String _defaultShift = 'morning';
@@ -41,6 +43,8 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
     _nameController.dispose();
     _phoneController.dispose();
     _designationController.dispose();
+    _morningRateController.dispose();
+    _nightRateController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -54,6 +58,9 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
     });
 
     try {
+      final morningRate = double.tryParse(_morningRateController.text.trim()) ?? 0.0;
+      final nightRate = double.tryParse(_nightRateController.text.trim()) ?? 0.0;
+
       final service = ref.read(employeeServiceProvider);
       await service.createEmployee(
         code: _codeController.text,
@@ -61,6 +68,8 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
         phone: _phoneController.text,
         designation: _designationController.text,
         defaultShift: _defaultShift,
+        hourlyRateMorning: morningRate,
+        hourlyRateNight: nightRate,
         notes: _notesController.text,
       );
 
@@ -165,6 +174,32 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
                   hintText: '+91 98765 43210',
                   prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Hourly Rates Row
+          Row(
+            children: [
+              Expanded(
+                child: GlassTextField(
+                  controller: _morningRateController,
+                  labelText: 'Day Rate (₹/hr)',
+                  hintText: 'e.g. 100',
+                  prefixIcon: Icons.wb_sunny_outlined,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GlassTextField(
+                  controller: _nightRateController,
+                  labelText: 'Night Rate (₹/hr)',
+                  hintText: 'e.g. 120',
+                  prefixIcon: Icons.nightlight_outlined,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 ),
               ),
             ],

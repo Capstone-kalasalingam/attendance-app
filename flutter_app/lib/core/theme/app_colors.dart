@@ -50,11 +50,16 @@ class AppColors {
   static const Color glassBorderStrong = Color(0xFFCBD5E1);
   static const Color glassHighlight = Color(0xFFFFFFFF);
 
+  // Primary brand navy / indigo
+  static const Color primaryNavy = Color(0xFF4F46E5);
+
   // Status colors with high contrast for white background
   static const Color presentEmerald = Color(0xFF059669);
   static const Color presentEmeraldLight = Color(0xFF10B981);
   static const Color presentBg = Color(0xFFECFDF5);
+  static const Color presentEmeraldBg = Color(0xFFECFDF5);
   static const Color presentBorder = Color(0xFFA7F3D0);
+  static const Color presentEmeraldBorder = Color(0xFFA7F3D0);
   static const Color presentGlow = Color(0x2210B981);
 
   static const Color absentRose = Color(0xFFDC2626);

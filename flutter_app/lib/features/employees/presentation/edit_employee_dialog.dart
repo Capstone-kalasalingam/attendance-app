@@ -34,6 +34,8 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
   late final TextEditingController _designationController;
+  late final TextEditingController _morningRateController;
+  late final TextEditingController _nightRateController;
   late final TextEditingController _notesController;
 
   late String _defaultShift;
@@ -46,6 +48,8 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
     _nameController = TextEditingController(text: widget.row.fullName);
     _phoneController = TextEditingController();
     _designationController = TextEditingController(text: widget.row.designation ?? '');
+    _morningRateController = TextEditingController(text: widget.row.hourlyRateMorning.toStringAsFixed(2));
+    _nightRateController = TextEditingController(text: widget.row.hourlyRateNight.toStringAsFixed(2));
     _notesController = TextEditingController();
     _defaultShift = widget.row.defaultShift;
   }
@@ -55,6 +59,8 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
     _nameController.dispose();
     _phoneController.dispose();
     _designationController.dispose();
+    _morningRateController.dispose();
+    _nightRateController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -68,6 +74,9 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
     });
 
     try {
+      final morningRate = double.tryParse(_morningRateController.text.trim()) ?? 0.0;
+      final nightRate = double.tryParse(_nightRateController.text.trim()) ?? 0.0;
+
       final service = ref.read(employeeServiceProvider);
       await service.updateEmployee(
         id: widget.row.employeeId,
@@ -75,6 +84,8 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
         phone: _phoneController.text,
         designation: _designationController.text,
         defaultShift: _defaultShift,
+        hourlyRateMorning: morningRate,
+        hourlyRateNight: nightRate,
         notes: _notesController.text,
       );
 
@@ -194,6 +205,32 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
                   labelText: 'Phone Number',
                   prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Hourly Rates Row
+          Row(
+            children: [
+              Expanded(
+                child: GlassTextField(
+                  controller: _morningRateController,
+                  labelText: 'Day Rate (₹/hr)',
+                  hintText: 'e.g. 100',
+                  prefixIcon: Icons.wb_sunny_outlined,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GlassTextField(
+                  controller: _nightRateController,
+                  labelText: 'Night Rate (₹/hr)',
+                  hintText: 'e.g. 120',
+                  prefixIcon: Icons.nightlight_outlined,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 ),
               ),
             ],

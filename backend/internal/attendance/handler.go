@@ -108,3 +108,17 @@ func (h *Handler) GetHistory(c *gin.Context) {
 
 	c.JSON(http.StatusOK, records)
 }
+
+func (h *Handler) GetPayrollOverview(c *gin.Context) {
+	startDate := c.Query("start_date")
+	endDate := c.Query("end_date")
+
+	overview, err := h.service.GetPayrollOverview(c.Request.Context(), startDate, endDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, overview)
+}
+

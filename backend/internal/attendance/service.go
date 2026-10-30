@@ -136,3 +136,18 @@ func (s *Service) GetAttendanceHistory(ctx context.Context, empIDStr, startDate,
 
 	return s.repo.GetAttendanceHistory(ctx, empID, startDate, endDate)
 }
+
+func (s *Service) GetPayrollOverview(ctx context.Context, startDate, endDate string) (*models.PayrollOverviewResponse, error) {
+	if startDate != "" {
+		if err := s.validateDate(startDate); err != nil {
+			return nil, errors.New("start_date must be in YYYY-MM-DD format")
+		}
+	}
+	if endDate != "" {
+		if err := s.validateDate(endDate); err != nil {
+			return nil, errors.New("end_date must be in YYYY-MM-DD format")
+		}
+	}
+	return s.repo.GetPayrollOverview(ctx, startDate, endDate)
+}
+

@@ -35,13 +35,15 @@ func (s *Service) CreateEmployee(ctx context.Context, req *models.CreateEmployee
 	}
 
 	emp := &models.Employee{
-		EmployeeCode: code,
-		FullName:     name,
-		PhoneNumber:  req.PhoneNumber,
-		Designation:  req.Designation,
-		DefaultShift: shift,
-		Notes:        req.Notes,
-		IsActive:     true,
+		EmployeeCode:      code,
+		FullName:          name,
+		PhoneNumber:       req.PhoneNumber,
+		Designation:       req.Designation,
+		DefaultShift:      shift,
+		Notes:             req.Notes,
+		HourlyRateMorning: req.HourlyRateMorning,
+		HourlyRateNight:   req.HourlyRateNight,
+		IsActive:          true,
 	}
 
 	if err := s.repo.CreateEmployee(ctx, emp); err != nil {

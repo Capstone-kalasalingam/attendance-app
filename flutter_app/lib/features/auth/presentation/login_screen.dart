@@ -4,7 +4,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/glass_button.dart';
 import '../../../core/widgets/glass_panel.dart';
 import '../../../core/widgets/glass_text_field.dart';
-import '../../../core/widgets/server_settings_dialog.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -39,11 +38,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
-    final activeBaseUrl = ref.watch(apiBaseUrlProvider);
-
-    final displayHost = activeBaseUrl
-        .replaceFirst('http://', '')
-        .replaceFirst('https://', '');
 
     return Scaffold(
       backgroundColor: AppColors.bgLight,
@@ -76,60 +70,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Server Connection Status Pill
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: InkWell(
-                            onTap: () => ServerSettingsDialog.show(context),
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: AppColors.glassBorder),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 7,
-                                    height: 7,
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: AppColors.presentEmerald,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppColors.presentEmerald,
-                                          blurRadius: 4,
-                                          spreadRadius: 1,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  ConstrainedBox(
-                                    constraints: const BoxConstraints(maxWidth: 170),
-                                    child: Text(
-                                      displayHost,
-                                      style: const TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 10,
-                                        color: AppColors.textMuted,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Icon(Icons.settings_outlined, size: 12, color: AppColors.textMuted),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
                         // App Brand Logo / Icon
                         Center(
                           child: Container(

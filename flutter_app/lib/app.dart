@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'core/theme/glass_theme.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/providers/auth_provider.dart';
-import 'features/dashboard/presentation/dashboard_screen.dart';
+import 'features/dashboard/presentation/main_navigation_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -18,7 +18,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/',
-        builder: (context, state) => const DashboardScreen(),
+        builder: (context, state) => const MainNavigationScreen(),
       ),
     ],
     redirect: (context, state) {

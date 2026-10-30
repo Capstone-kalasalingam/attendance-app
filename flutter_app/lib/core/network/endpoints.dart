@@ -14,6 +14,7 @@ class Endpoints {
       '/api/v1/attendance/$empId/$date/$shift';
   static const String bulkAttendance = '/api/v1/attendance/bulk';
   static const String attendanceHistory = '/api/v1/attendance/history';
+  static const String attendancePayroll = '/api/v1/attendance/payroll';
 
   static const String exportExcel = '/api/v1/exports/attendance.xlsx';
 }

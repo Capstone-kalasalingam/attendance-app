@@ -33,6 +33,13 @@ func (r *Repository) GetAttendanceDashboardRows(ctx context.Context, dateStr str
 			COALESCE(ar.shift, e.default_shift) AS shift,
 			ar.status,
 			COALESCE(ar.hours_worked, 0.0) AS hours_worked,
+			e.hourly_rate_morning,
+			e.hourly_rate_night,
+			CASE 
+				WHEN ar.status = 'present' THEN
+					COALESCE(ar.hours_worked, 0.0) * (CASE WHEN COALESCE(ar.shift, e.default_shift) = 'night' THEN e.hourly_rate_night ELSE e.hourly_rate_morning END)
+				ELSE 0.0 
+			END AS daily_salary,
 			ar.work_description,
 			ar.id AS record_id,
 			ar.updated_at AS last_updated
@@ -60,6 +67,9 @@ func (r *Repository) GetAttendanceDashboardRows(ctx context.Context, dateStr str
 			&row.Shift,
 			&row.Status,
 			&row.HoursWorked,
+			&row.HourlyRateMorning,
+			&row.HourlyRateNight,
+			&row.DailySalary,
 			&row.WorkDescription,
 			&row.RecordID,
 			&row.LastUpdated,
@@ -327,3 +337,74 @@ func (r *Repository) GetAttendanceHistory(ctx context.Context, employeeID *uuid.
 
 	return records, nil
 }
+
+func (r *Repository) GetPayrollOverview(ctx context.Context, startDate, endDate string) (*models.PayrollOverviewResponse, error) {
+	overview := &models.PayrollOverviewResponse{
+		StartDate: startDate,
+		EndDate:   endDate,
+		Employees: []models.EmployeeSalarySummary{},
+	}
+
+	query := `
+		SELECT 
+			e.id,
+			e.employee_code,
+			e.full_name,
+			e.designation,
+			e.hourly_rate_morning,
+			e.hourly_rate_night,
+			COALESCE(SUM(CASE WHEN ar.shift = 'morning' AND ar.status = 'present' THEN ar.hours_worked ELSE 0 END), 0.0) AS morning_hours,
+			COALESCE(SUM(CASE WHEN ar.shift = 'night' AND ar.status = 'present' THEN ar.hours_worked ELSE 0 END), 0.0) AS night_hours,
+			COALESCE(SUM(CASE WHEN ar.status = 'present' THEN ar.hours_worked ELSE 0 END), 0.0) AS total_hours,
+			COUNT(DISTINCT CASE WHEN ar.status = 'present' THEN ar.attendance_date END) AS present_days,
+			COUNT(DISTINCT CASE WHEN ar.status = 'absent' THEN ar.attendance_date END) AS absent_days
+		FROM employees e
+		LEFT JOIN attendance_records ar 
+			ON e.id = ar.employee_id 
+			AND ($1 = '' OR ar.attendance_date >= $1::date)
+			AND ($2 = '' OR ar.attendance_date <= $2::date)
+		WHERE e.is_active = true
+		GROUP BY e.id, e.employee_code, e.full_name, e.designation, e.hourly_rate_morning, e.hourly_rate_night
+		ORDER BY e.full_name ASC
+	`
+	rows, err := r.pool.Query(ctx, query, startDate, endDate)
+	if err != nil {
+		return nil, fmt.Errorf("error querying payroll overview: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var emp models.EmployeeSalarySummary
+		err := rows.Scan(
+			&emp.EmployeeID,
+			&emp.EmployeeCode,
+			&emp.FullName,
+			&emp.Designation,
+			&emp.HourlyRateMorning,
+			&emp.HourlyRateNight,
+			&emp.MorningHours,
+			&emp.NightHours,
+			&emp.TotalHours,
+			&emp.PresentDays,
+			&emp.AbsentDays,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning employee payroll summary: %w", err)
+		}
+
+		emp.MorningSalary = emp.MorningHours * emp.HourlyRateMorning
+		emp.NightSalary = emp.NightHours * emp.HourlyRateNight
+		emp.TotalSalary = emp.MorningSalary + emp.NightSalary
+
+		overview.MorningHours += emp.MorningHours
+		overview.NightHours += emp.NightHours
+		overview.TotalHours += emp.TotalHours
+		overview.TotalPayroll += emp.TotalSalary
+		overview.TotalPresent += emp.PresentDays
+
+		overview.Employees = append(overview.Employees, emp)
+	}
+
+	return overview, nil
+}
+

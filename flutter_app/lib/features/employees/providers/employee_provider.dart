@@ -10,11 +10,30 @@ final employeeServiceProvider = Provider<EmployeeService>((ref) {
   return EmployeeService(apiClient: apiClient, ref: ref);
 });
 
+final employeesListProvider = FutureProvider<List<EmployeeModel>>((ref) async {
+  final service = ref.watch(employeeServiceProvider);
+  return service.getEmployees();
+});
+
 class EmployeeService {
   final ApiClient apiClient;
   final Ref ref;
 
   EmployeeService({required this.apiClient, required this.ref});
+
+  Future<List<EmployeeModel>> getEmployees({String? search, bool? activeOnly}) async {
+    final queryParams = <String, dynamic>{};
+    if (search != null && search.isNotEmpty) queryParams['search'] = search;
+    if (activeOnly != null) queryParams['active'] = activeOnly;
+
+    final response = await apiClient.dio.get(
+      Endpoints.employees,
+      queryParameters: queryParams,
+    );
+
+    final list = response.data as List<dynamic>;
+    return list.map((e) => EmployeeModel.fromJson(e as Map<String, dynamic>)).toList();
+  }
 
   Future<EmployeeModel> createEmployee({
     required String code,
@@ -23,6 +42,8 @@ class EmployeeService {
     String? designation,
     required String defaultShift,
     String? notes,
+    double hourlyRateMorning = 0.0,
+    double hourlyRateNight = 0.0,
   }) async {
     final response = await apiClient.dio.post(
       Endpoints.employees,
@@ -33,13 +54,16 @@ class EmployeeService {
         'designation': designation?.trim().isEmpty == true ? null : designation?.trim(),
         'default_shift': defaultShift.toLowerCase(),
         'notes': notes?.trim().isEmpty == true ? null : notes?.trim(),
+        'hourly_rate_morning': hourlyRateMorning,
+        'hourly_rate_night': hourlyRateNight,
       },
     );
 
     final newEmp = EmployeeModel.fromJson(response.data as Map<String, dynamic>);
 
-    // Trigger dashboard refresh immediately
+    // Trigger dashboard and employees list refresh
     ref.read(dashboardNotifierProvider.notifier).loadData();
+    ref.invalidate(employeesListProvider);
 
     return newEmp;
   }
@@ -51,6 +75,8 @@ class EmployeeService {
     String? designation,
     required String defaultShift,
     String? notes,
+    double? hourlyRateMorning,
+    double? hourlyRateNight,
     bool? isActive,
   }) async {
     final response = await apiClient.dio.patch(
@@ -61,12 +87,15 @@ class EmployeeService {
         'designation': designation?.trim().isEmpty == true ? null : designation?.trim(),
         'default_shift': defaultShift.toLowerCase(),
         'notes': notes?.trim().isEmpty == true ? null : notes?.trim(),
-        'is_active': isActive,
+        if (hourlyRateMorning != null) 'hourly_rate_morning': hourlyRateMorning,
+        if (hourlyRateNight != null) 'hourly_rate_night': hourlyRateNight,
+        if (isActive != null) 'is_active': isActive,
       },
     );
 
     final updatedEmp = EmployeeModel.fromJson(response.data as Map<String, dynamic>);
     ref.read(dashboardNotifierProvider.notifier).loadData();
+    ref.invalidate(employeesListProvider);
     return updatedEmp;
   }
 
@@ -76,5 +105,6 @@ class EmployeeService {
       data: {'is_active': isActive},
     );
     ref.read(dashboardNotifierProvider.notifier).loadData();
+    ref.invalidate(employeesListProvider);
   }
 }

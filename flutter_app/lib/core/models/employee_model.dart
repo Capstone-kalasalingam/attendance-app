@@ -6,6 +6,8 @@ class EmployeeModel {
   final String? designation;
   final String defaultShift;
   final String? notes;
+  final double hourlyRateMorning;
+  final double hourlyRateNight;
   final bool isActive;
 
   EmployeeModel({
@@ -16,6 +18,8 @@ class EmployeeModel {
     this.designation,
     required this.defaultShift,
     this.notes,
+    this.hourlyRateMorning = 0.0,
+    this.hourlyRateNight = 0.0,
     required this.isActive,
   });
 
@@ -28,6 +32,8 @@ class EmployeeModel {
       designation: json['designation'] as String?,
       defaultShift: (json['default_shift'] as String?)?.toLowerCase() ?? 'morning',
       notes: json['notes'] as String?,
+      hourlyRateMorning: (json['hourly_rate_morning'] as num?)?.toDouble() ?? 0.0,
+      hourlyRateNight: (json['hourly_rate_night'] as num?)?.toDouble() ?? 0.0,
       isActive: json['is_active'] as bool? ?? true,
     );
   }
@@ -41,6 +47,8 @@ class EmployeeModel {
       'designation': designation,
       'default_shift': defaultShift,
       'notes': notes,
+      'hourly_rate_morning': hourlyRateMorning,
+      'hourly_rate_night': hourlyRateNight,
       'is_active': isActive,
     };
   }

@@ -297,6 +297,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               },
                             ),
                         ],
+                        const SizedBox(height: 80),
                       ],
                     ),
                   ),

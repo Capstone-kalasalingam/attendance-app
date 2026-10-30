@@ -22,8 +22,8 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 
 func (r *Repository) CreateEmployee(ctx context.Context, emp *models.Employee) error {
 	query := `
-		INSERT INTO employees (employee_code, full_name, phone_number, designation, default_shift, notes, is_active)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO employees (employee_code, full_name, phone_number, designation, default_shift, notes, hourly_rate_morning, hourly_rate_night, is_active)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id, created_at, updated_at
 	`
 	return r.pool.QueryRow(ctx, query,
@@ -33,6 +33,8 @@ func (r *Repository) CreateEmployee(ctx context.Context, emp *models.Employee) e
 		emp.Designation,
 		emp.DefaultShift,
 		emp.Notes,
+		emp.HourlyRateMorning,
+		emp.HourlyRateNight,
 		emp.IsActive,
 	).Scan(&emp.ID, &emp.CreatedAt, &emp.UpdatedAt)
 }
@@ -61,7 +63,7 @@ func (r *Repository) GetEmployees(ctx context.Context, search string, activeFilt
 	}
 
 	query := fmt.Sprintf(`
-		SELECT id, employee_code, full_name, phone_number, designation, default_shift, notes, is_active, created_at, updated_at
+		SELECT id, employee_code, full_name, phone_number, designation, default_shift, notes, hourly_rate_morning, hourly_rate_night, is_active, created_at, updated_at
 		FROM employees
 		%s
 		ORDER BY full_name ASC
@@ -84,6 +86,8 @@ func (r *Repository) GetEmployees(ctx context.Context, search string, activeFilt
 			&emp.Designation,
 			&emp.DefaultShift,
 			&emp.Notes,
+			&emp.HourlyRateMorning,
+			&emp.HourlyRateNight,
 			&emp.IsActive,
 			&emp.CreatedAt,
 			&emp.UpdatedAt,
@@ -103,7 +107,7 @@ func (r *Repository) GetEmployees(ctx context.Context, search string, activeFilt
 
 func (r *Repository) GetEmployeeByID(ctx context.Context, id uuid.UUID) (*models.Employee, error) {
 	query := `
-		SELECT id, employee_code, full_name, phone_number, designation, default_shift, notes, is_active, created_at, updated_at
+		SELECT id, employee_code, full_name, phone_number, designation, default_shift, notes, hourly_rate_morning, hourly_rate_night, is_active, created_at, updated_at
 		FROM employees
 		WHERE id = $1
 	`
@@ -116,6 +120,8 @@ func (r *Repository) GetEmployeeByID(ctx context.Context, id uuid.UUID) (*models
 		&emp.Designation,
 		&emp.DefaultShift,
 		&emp.Notes,
+		&emp.HourlyRateMorning,
+		&emp.HourlyRateNight,
 		&emp.IsActive,
 		&emp.CreatedAt,
 		&emp.UpdatedAt,
@@ -137,10 +143,12 @@ func (r *Repository) UpdateEmployee(ctx context.Context, id uuid.UUID, req *mode
 		    designation = $3,
 		    default_shift = $4,
 		    notes = $5,
-		    is_active = COALESCE($6, is_active),
+		    hourly_rate_morning = COALESCE($6, hourly_rate_morning),
+		    hourly_rate_night = COALESCE($7, hourly_rate_night),
+		    is_active = COALESCE($8, is_active),
 		    updated_at = CURRENT_TIMESTAMP
-		WHERE id = $7
-		RETURNING id, employee_code, full_name, phone_number, designation, default_shift, notes, is_active, created_at, updated_at
+		WHERE id = $9
+		RETURNING id, employee_code, full_name, phone_number, designation, default_shift, notes, hourly_rate_morning, hourly_rate_night, is_active, created_at, updated_at
 	`
 	var emp models.Employee
 	err := r.pool.QueryRow(ctx, query,
@@ -149,6 +157,8 @@ func (r *Repository) UpdateEmployee(ctx context.Context, id uuid.UUID, req *mode
 		req.Designation,
 		req.DefaultShift,
 		req.Notes,
+		req.HourlyRateMorning,
+		req.HourlyRateNight,
 		req.IsActive,
 		id,
 	).Scan(
@@ -159,6 +169,8 @@ func (r *Repository) UpdateEmployee(ctx context.Context, id uuid.UUID, req *mode
 		&emp.Designation,
 		&emp.DefaultShift,
 		&emp.Notes,
+		&emp.HourlyRateMorning,
+		&emp.HourlyRateNight,
 		&emp.IsActive,
 		&emp.CreatedAt,
 		&emp.UpdatedAt,

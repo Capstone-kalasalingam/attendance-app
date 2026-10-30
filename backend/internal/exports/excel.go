@@ -27,9 +27,6 @@ type ExportFilter struct {
 
 func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter ExportFilter) (*excelize.File, error) {
 	f := excelize.NewFile()
-	defer func() {
-		// Default sheet 'Sheet1' will be renamed or replaced
-	}()
 
 	// Define cell styles
 	headerStyle, err := f.NewStyle(&excelize.Style{
@@ -58,7 +55,82 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 		return nil, fmt.Errorf("error creating header style: %w", err)
 	}
 
-	dataStyle, err := f.NewStyle(&excelize.Style{
+	// Date Style A: Pure White
+	dateStyleA, err := f.NewStyle(&excelize.Style{
+		Alignment: &excelize.Alignment{
+			Vertical: "center",
+		},
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Color:   []string{"FFFFFF"},
+			Pattern: 1,
+		},
+		Border: []excelize.Border{
+			{Type: "bottom", Color: "E2E8F0", Style: 1},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Date Style B: Soft Ice Blue tint for distinct date clustering
+	dateStyleB, err := f.NewStyle(&excelize.Style{
+		Alignment: &excelize.Alignment{
+			Vertical: "center",
+		},
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Color:   []string{"EFF6FF"}, // Soft Blue Tint
+			Pattern: 1,
+		},
+		Border: []excelize.Border{
+			{Type: "bottom", Color: "CBD5E1", Style: 1},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Date Divider Style A: Top divider line when date switches
+	dateDividerStyleA, err := f.NewStyle(&excelize.Style{
+		Alignment: &excelize.Alignment{
+			Vertical: "center",
+		},
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Color:   []string{"FFFFFF"},
+			Pattern: 1,
+		},
+		Border: []excelize.Border{
+			{Type: "top", Color: "475569", Style: 2}, // Distinct medium top divider
+			{Type: "bottom", Color: "E2E8F0", Style: 1},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Date Divider Style B: Top divider line when date switches
+	dateDividerStyleB, err := f.NewStyle(&excelize.Style{
+		Alignment: &excelize.Alignment{
+			Vertical: "center",
+		},
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Color:   []string{"EFF6FF"},
+			Pattern: 1,
+		},
+		Border: []excelize.Border{
+			{Type: "top", Color: "475569", Style: 2}, // Distinct medium top divider
+			{Type: "bottom", Color: "CBD5E1", Style: 1},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Standard general data style
+	generalDataStyle, err := f.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Vertical: "center",
 		},
@@ -67,16 +139,52 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 		},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error creating data style: %w", err)
+		return nil, err
+	}
+
+	// Grand Total Row Style
+	grandTotalStyle, err := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{
+			Bold:   true,
+			Color:  "0F172A",
+			Size:   11,
+			Family: "Calibri",
+		},
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Color:   []string{"E0E7FF"}, // Soft Indigo Accent
+			Pattern: 1,
+		},
+		Alignment: &excelize.Alignment{
+			Vertical: "center",
+		},
+		Border: []excelize.Border{
+			{Type: "top", Color: "475569", Style: 1},
+			{Type: "bottom", Color: "1E293B", Style: 6}, // Double bottom border for accounting total
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	// -------------------------------------------------------------
-	// SHEET 1: Attendance Details
+	// SHEET 1: Attendance Details (Chronological ASC + Date Color Segregation + Daily Salary)
 	// -------------------------------------------------------------
 	sheet1 := "Attendance Details"
 	f.SetSheetName("Sheet1", sheet1)
 
-	headers1 := []string{"Date", "Employee ID", "Employee Name", "Shift", "Status", "Hours Worked", "Work Description", "Last Updated"}
+	headers1 := []string{
+		"Date",
+		"Employee ID",
+		"Employee Name",
+		"Shift",
+		"Status",
+		"Hours Worked",
+		"Hourly Rate (₹)",
+		"Daily Salary (₹)",
+		"Work Description",
+		"Last Updated",
+	}
 	for colIdx, h := range headers1 {
 		cell, _ := excelize.CoordinatesToCellName(colIdx+1, 1)
 		f.SetCellValue(sheet1, cell, h)
@@ -128,6 +236,7 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 		whereClause = "WHERE " + strings.Join(conditions, " AND ")
 	}
 
+	// Strictly chronological (ASC) by attendance_date, then employee_code
 	query1 := fmt.Sprintf(`
 		SELECT 
 			ar.attendance_date::text,
@@ -136,12 +245,14 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 			UPPER(SUBSTRING(ar.shift FROM 1 FOR 1)) || SUBSTRING(ar.shift FROM 2),
 			UPPER(SUBSTRING(ar.status FROM 1 FOR 1)) || SUBSTRING(ar.status FROM 2),
 			ar.hours_worked,
+			e.hourly_rate_morning,
+			e.hourly_rate_night,
 			COALESCE(ar.work_description, ''),
 			to_char(ar.updated_at, 'YYYY-MM-DD HH24:MI:SS')
 		FROM attendance_records ar
 		JOIN employees e ON ar.employee_id = e.id
 		%s
-		ORDER BY ar.attendance_date DESC, e.full_name ASC
+		ORDER BY ar.attendance_date ASC, e.employee_code ASC
 	`, whereClause)
 
 	rows1, err := s.pool.Query(ctx, query1, args...)
@@ -151,11 +262,49 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 	defer rows1.Close()
 
 	rowIdx1 := 2
+	prevDate := ""
+	isTinted := false
+
 	for rows1.Next() {
 		var date, code, name, shift, status, desc, updated string
-		var hours float64
-		if err := rows1.Scan(&date, &code, &name, &shift, &status, &hours, &desc, &updated); err != nil {
+		var hours, rateMorning, rateNight float64
+		if err := rows1.Scan(&date, &code, &name, &shift, &status, &hours, &rateMorning, &rateNight, &desc, &updated); err != nil {
 			return nil, err
+		}
+
+		isDateChange := false
+		if prevDate != "" && date != prevDate {
+			isTinted = !isTinted
+			isDateChange = true
+		}
+		prevDate = date
+
+		// Hourly rate calculation based on day vs night shift
+		rate := rateMorning
+		if strings.ToLower(shift) == "night" {
+			rate = rateNight
+		}
+
+		// Daily salary calculation
+		dailySalary := 0.00
+		if strings.ToLower(status) == "present" {
+			dailySalary = hours * rate
+		}
+
+		// Choose style based on tint state and date boundary
+		var activeStyle int
+		if isTinted {
+			if isDateChange {
+				activeStyle = dateDividerStyleB
+			} else {
+				activeStyle = dateStyleB
+			}
+		} else {
+			if isDateChange {
+				activeStyle = dateDividerStyleA
+			} else {
+				activeStyle = dateStyleA
+			}
 		}
 
 		f.SetCellValue(sheet1, fmt.Sprintf("A%d", rowIdx1), date)
@@ -164,22 +313,24 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 		f.SetCellValue(sheet1, fmt.Sprintf("D%d", rowIdx1), shift)
 		f.SetCellValue(sheet1, fmt.Sprintf("E%d", rowIdx1), status)
 		f.SetCellValue(sheet1, fmt.Sprintf("F%d", rowIdx1), hours)
-		f.SetCellValue(sheet1, fmt.Sprintf("G%d", rowIdx1), desc)
-		f.SetCellValue(sheet1, fmt.Sprintf("H%d", rowIdx1), updated)
-		_ = f.SetRowStyle(sheet1, rowIdx1, rowIdx1, dataStyle)
+		f.SetCellValue(sheet1, fmt.Sprintf("G%d", rowIdx1), rate)
+		f.SetCellValue(sheet1, fmt.Sprintf("H%d", rowIdx1), dailySalary)
+		f.SetCellValue(sheet1, fmt.Sprintf("I%d", rowIdx1), desc)
+		f.SetCellValue(sheet1, fmt.Sprintf("J%d", rowIdx1), updated)
+		_ = f.SetRowStyle(sheet1, rowIdx1, rowIdx1, activeStyle)
 		rowIdx1++
 	}
 
-	// Auto-fit column widths
+	// Auto-fit column widths for Sheet 1
 	colWidths1 := map[string]float64{
-		"A": 14, "B": 16, "C": 24, "D": 14, "E": 14, "F": 16, "G": 28, "H": 22,
+		"A": 14, "B": 16, "C": 24, "D": 14, "E": 14, "F": 16, "G": 18, "H": 18, "I": 28, "J": 22,
 	}
 	for col, width := range colWidths1 {
 		_ = f.SetColWidth(sheet1, col, col, width)
 	}
 
 	// -------------------------------------------------------------
-	// SHEET 2: Daily Summary
+	// SHEET 2: Daily Summary (Ascending Chronological)
 	// -------------------------------------------------------------
 	sheet2 := "Daily Summary"
 	f.NewSheet(sheet2)
@@ -216,7 +367,7 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 		WHERE ($1 = '' OR ar.attendance_date >= $1::date)
 		  AND ($2 = '' OR ar.attendance_date <= $2::date)
 		GROUP BY ar.attendance_date
-		ORDER BY ar.attendance_date DESC
+		ORDER BY ar.attendance_date ASC
 	`
 	rows2, err := s.pool.Query(ctx, query2, filter.StartDate, filter.EndDate)
 	if err != nil {
@@ -238,6 +389,7 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 		if notMarked < 0 {
 			notMarked = 0
 		}
+
 		completion := 0.0
 		if totalActive > 0 {
 			completion = (float64(present+absent) / float64(totalActive)) * 100.0
@@ -252,7 +404,7 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 		f.SetCellValue(sheet2, fmt.Sprintf("G%d", rowIdx2), night)
 		f.SetCellValue(sheet2, fmt.Sprintf("H%d", rowIdx2), totalHours)
 		f.SetCellValue(sheet2, fmt.Sprintf("I%d", rowIdx2), fmt.Sprintf("%.1f%%", completion))
-		_ = f.SetRowStyle(sheet2, rowIdx2, rowIdx2, dataStyle)
+		_ = f.SetRowStyle(sheet2, rowIdx2, rowIdx2, generalDataStyle)
 		rowIdx2++
 	}
 
@@ -264,14 +416,23 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 	}
 
 	// -------------------------------------------------------------
-	// SHEET 3: Employee Summary
+	// SHEET 3: Salary & Hours Summary (Shows each employee's hours + total salary + Grand Total row)
 	// -------------------------------------------------------------
-	sheet3 := "Employee Summary"
+	sheet3 := "Salary & Hours Summary"
 	f.NewSheet(sheet3)
 
 	headers3 := []string{
-		"Employee ID", "Employee Name", "Designation", "Total Present Days",
-		"Total Absent Days", "Total Hours Worked", "Morning Shift Count", "Night Shift Count",
+		"Employee ID",
+		"Employee Name",
+		"Designation",
+		"Present Days",
+		"Absent Days",
+		"Day Shift Hours",
+		"Night Shift Hours",
+		"Total Hours Worked",
+		"Day Rate (₹/hr)",
+		"Night Rate (₹/hr)",
+		"Total Salary (₹)",
 	}
 	for colIdx, h := range headers3 {
 		cell, _ := excelize.CoordinatesToCellName(colIdx+1, 1)
@@ -293,11 +454,13 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 			e.employee_code,
 			e.full_name,
 			COALESCE(e.designation, ''),
+			e.hourly_rate_morning,
+			e.hourly_rate_night,
 			COUNT(DISTINCT CASE WHEN ar.status = 'present' THEN ar.attendance_date END) AS present_days,
 			COUNT(DISTINCT CASE WHEN ar.status = 'absent' THEN ar.attendance_date END) AS absent_days,
-			COALESCE(SUM(CASE WHEN ar.status = 'present' THEN ar.hours_worked ELSE 0 END), 0.0) AS total_hours,
-			COUNT(CASE WHEN ar.shift = 'morning' AND ar.status = 'present' THEN 1 END) AS morning_count,
-			COUNT(CASE WHEN ar.shift = 'night' AND ar.status = 'present' THEN 1 END) AS night_count
+			COALESCE(SUM(CASE WHEN ar.shift = 'morning' AND ar.status = 'present' THEN ar.hours_worked ELSE 0 END), 0.0) AS morning_hours,
+			COALESCE(SUM(CASE WHEN ar.shift = 'night' AND ar.status = 'present' THEN ar.hours_worked ELSE 0 END), 0.0) AS night_hours,
+			COALESCE(SUM(CASE WHEN ar.status = 'present' THEN ar.hours_worked ELSE 0 END), 0.0) AS total_hours
 		FROM employees e
 		LEFT JOIN attendance_records ar 
 			ON e.id = ar.employee_id 
@@ -305,7 +468,7 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 			AND ($2 = '' OR ar.attendance_date <= $2::date)
 		WHERE e.is_active = true
 		  AND ($3 = '' OR e.id = $3::uuid)
-		GROUP BY e.id, e.employee_code, e.full_name, e.designation
+		GROUP BY e.id, e.employee_code, e.full_name, e.designation, e.hourly_rate_morning, e.hourly_rate_night
 		ORDER BY e.full_name ASC
 	`
 	rows3, err := s.pool.Query(ctx, query3, filter.StartDate, filter.EndDate, filter.EmployeeID)
@@ -315,29 +478,70 @@ func (s *ExcelService) GenerateAttendanceWorkbook(ctx context.Context, filter Ex
 	defer rows3.Close()
 
 	rowIdx3 := 2
+	var grandPresentDays, grandAbsentDays int
+	var grandDayHours, grandNightHours, grandTotalHours, grandTotalSalary float64
+
 	for rows3.Next() {
 		var code, name, designation string
-		var presentDays, absentDays, morningCount, nightCount int
-		var totalHours float64
+		var morningRate, nightRate, morningHours, nightHours, totalHours float64
+		var presentDays, absentDays int
 
-		if err := rows3.Scan(&code, &name, &designation, &presentDays, &absentDays, &totalHours, &morningCount, &nightCount); err != nil {
+		if err := rows3.Scan(
+			&code,
+			&name,
+			&designation,
+			&morningRate,
+			&nightRate,
+			&presentDays,
+			&absentDays,
+			&morningHours,
+			&nightHours,
+			&totalHours,
+		); err != nil {
 			return nil, err
 		}
+
+		totalSalary := (morningHours * morningRate) + (nightHours * nightRate)
+
+		grandPresentDays += presentDays
+		grandAbsentDays += absentDays
+		grandDayHours += morningHours
+		grandNightHours += nightHours
+		grandTotalHours += totalHours
+		grandTotalSalary += totalSalary
 
 		f.SetCellValue(sheet3, fmt.Sprintf("A%d", rowIdx3), code)
 		f.SetCellValue(sheet3, fmt.Sprintf("B%d", rowIdx3), name)
 		f.SetCellValue(sheet3, fmt.Sprintf("C%d", rowIdx3), designation)
 		f.SetCellValue(sheet3, fmt.Sprintf("D%d", rowIdx3), presentDays)
 		f.SetCellValue(sheet3, fmt.Sprintf("E%d", rowIdx3), absentDays)
-		f.SetCellValue(sheet3, fmt.Sprintf("F%d", rowIdx3), totalHours)
-		f.SetCellValue(sheet3, fmt.Sprintf("G%d", rowIdx3), morningCount)
-		f.SetCellValue(sheet3, fmt.Sprintf("H%d", rowIdx3), nightCount)
-		_ = f.SetRowStyle(sheet3, rowIdx3, rowIdx3, dataStyle)
+		f.SetCellValue(sheet3, fmt.Sprintf("F%d", rowIdx3), morningHours)
+		f.SetCellValue(sheet3, fmt.Sprintf("G%d", rowIdx3), nightHours)
+		f.SetCellValue(sheet3, fmt.Sprintf("H%d", rowIdx3), totalHours)
+		f.SetCellValue(sheet3, fmt.Sprintf("I%d", rowIdx3), morningRate)
+		f.SetCellValue(sheet3, fmt.Sprintf("J%d", rowIdx3), nightRate)
+		f.SetCellValue(sheet3, fmt.Sprintf("K%d", rowIdx3), totalSalary)
+		_ = f.SetRowStyle(sheet3, rowIdx3, rowIdx3, generalDataStyle)
 		rowIdx3++
 	}
 
+	// Add Grand Total row at the end
+	f.SetCellValue(sheet3, fmt.Sprintf("A%d", rowIdx3), "GRAND TOTAL")
+	f.SetCellValue(sheet3, fmt.Sprintf("B%d", rowIdx3), "")
+	f.SetCellValue(sheet3, fmt.Sprintf("C%d", rowIdx3), "")
+	f.SetCellValue(sheet3, fmt.Sprintf("D%d", rowIdx3), grandPresentDays)
+	f.SetCellValue(sheet3, fmt.Sprintf("E%d", rowIdx3), grandAbsentDays)
+	f.SetCellValue(sheet3, fmt.Sprintf("F%d", rowIdx3), grandDayHours)
+	f.SetCellValue(sheet3, fmt.Sprintf("G%d", rowIdx3), grandNightHours)
+	f.SetCellValue(sheet3, fmt.Sprintf("H%d", rowIdx3), grandTotalHours)
+	f.SetCellValue(sheet3, fmt.Sprintf("I%d", rowIdx3), "-")
+	f.SetCellValue(sheet3, fmt.Sprintf("J%d", rowIdx3), "-")
+	f.SetCellValue(sheet3, fmt.Sprintf("K%d", rowIdx3), grandTotalSalary)
+	_ = f.SetRowStyle(sheet3, rowIdx3, rowIdx3, grandTotalStyle)
+	_ = f.SetRowHeight(sheet3, rowIdx3, 24)
+
 	colWidths3 := map[string]float64{
-		"A": 16, "B": 24, "C": 20, "D": 18, "E": 18, "F": 18, "G": 20, "H": 18,
+		"A": 16, "B": 24, "C": 20, "D": 14, "E": 14, "F": 18, "G": 18, "H": 20, "I": 16, "J": 16, "K": 20,
 	}
 	for col, width := range colWidths3 {
 		_ = f.SetColWidth(sheet3, col, col, width)
