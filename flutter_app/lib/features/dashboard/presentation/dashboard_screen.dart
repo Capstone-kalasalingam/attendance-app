@@ -382,7 +382,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     GlassButton(
                       text: 'Export Excel',
                       icon: Icons.file_download_outlined,
-                      onPressed: () => ExportExcelDialog.show(context, dashboardState.selectedDate),
+                      onPressed: () => ExportExcelDialog.show(
+                        context,
+                        dashboardState.selectedDate,
+                        range: dashboardState.isRangeMode && dashboardState.startDate != null && dashboardState.endDate != null
+                            ? DateTimeRange(start: dashboardState.startDate!, end: dashboardState.endDate!)
+                            : null,
+                      ),
                       variant: GlassButtonVariant.secondary,
                     ),
                     const SizedBox(width: 12),
@@ -503,7 +509,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                       ),
                       tooltip: 'Export Excel',
-                      onPressed: () => ExportExcelDialog.show(context, dashboardState.selectedDate),
+                      onPressed: () => ExportExcelDialog.show(
+                        context,
+                        dashboardState.selectedDate,
+                        range: dashboardState.isRangeMode && dashboardState.startDate != null && dashboardState.endDate != null
+                            ? DateTimeRange(start: dashboardState.startDate!, end: dashboardState.endDate!)
+                            : null,
+                      ),
                     ),
                   ],
                 ),
@@ -522,13 +534,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required bool isMobile,
   }) {
     final now = DateTime.now();
-    final isToday = state.selectedDate.year == now.year &&
+    final isToday = !state.isRangeMode &&
+        state.selectedDate.year == now.year &&
         state.selectedDate.month == now.month &&
         state.selectedDate.day == now.day;
-    final dateLabel = isMobile ? state.compactDateTitle : state.formattedDateTitle;
+    final dateLabel = state.isRangeMode
+        ? state.rangeTitle
+        : (isMobile ? state.compactDateTitle : state.formattedDateTitle);
 
     final datePickerButton = InkWell(
-      onTap: () => _pickDate(state.selectedDate),
+      onTap: () => _openDateOrRangePicker(state, notifier),
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: isMobile ? 6 : 10, vertical: 4),
@@ -536,7 +551,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.calendar_today_rounded, size: 14, color: Color(0xFF4F46E5)),
+            Icon(
+              state.isRangeMode ? Icons.date_range_rounded : Icons.calendar_today_rounded,
+              size: 14,
+              color: const Color(0xFF4F46E5),
+            ),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
@@ -551,6 +570,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (state.isRangeMode) ...[
+              const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '${state.totalRangeDays}d',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF4F46E5),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -561,7 +599,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.glassBorder),
+        border: Border.all(color: state.isRangeMode ? const Color(0xFF818CF8) : AppColors.glassBorder),
         boxShadow: const [AppColors.cardShadow],
       ),
       child: Row(
@@ -573,7 +611,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             onPressed: () {
-              notifier.setDate(state.selectedDate.subtract(const Duration(days: 1)));
+              if (state.isRangeMode && state.startDate != null && state.endDate != null) {
+                final days = state.totalRangeDays;
+                notifier.setDateRange(
+                  state.startDate!.subtract(Duration(days: days)),
+                  state.endDate!.subtract(Duration(days: days)),
+                );
+              } else {
+                notifier.setDate(state.selectedDate.subtract(const Duration(days: 1)));
+              }
             },
           ),
           if (isMobile)
@@ -586,10 +632,48 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             onPressed: () {
-              notifier.setDate(state.selectedDate.add(const Duration(days: 1)));
+              if (state.isRangeMode && state.startDate != null && state.endDate != null) {
+                final days = state.totalRangeDays;
+                notifier.setDateRange(
+                  state.startDate!.add(Duration(days: days)),
+                  state.endDate!.add(Duration(days: days)),
+                );
+              } else {
+                notifier.setDate(state.selectedDate.add(const Duration(days: 1)));
+              }
             },
           ),
-          if (!isToday) ...[
+          if (state.isRangeMode) ...[
+            const SizedBox(width: 4),
+            InkWell(
+              onTap: () => notifier.clearDateRange(),
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFFECACA)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.close_rounded, size: 10, color: AppColors.absentRose),
+                    SizedBox(width: 2),
+                    Text(
+                      'Day',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.absentRose,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ] else if (!isToday) ...[
             const SizedBox(width: 4),
             InkWell(
               onTap: () => notifier.setDate(DateTime.now()),
