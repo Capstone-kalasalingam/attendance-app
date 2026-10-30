@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/glass_button.dart';
-import '../../../../core/widgets/glass_dialog.dart';
-import '../../../../core/widgets/glass_text_field.dart';
+import '../../../core/network/api_client.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/glass_button.dart';
+import '../../../core/widgets/glass_dialog.dart';
+import '../../../core/widgets/glass_text_field.dart';
+import '../../dashboard/providers/dashboard_provider.dart';
+import '../../salary/providers/salary_provider.dart';
 import '../providers/employee_provider.dart';
 
 class AddEmployeeDialog extends ConsumerStatefulWidget {
@@ -75,6 +77,9 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
 
       if (mounted) {
         Navigator.of(context).pop();
+        ref.read(dashboardNotifierProvider.notifier).loadData();
+        ref.invalidate(employeesListProvider);
+        ref.read(salaryNotifierProvider.notifier).loadPayroll();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Employee "${_nameController.text}" added successfully!'),

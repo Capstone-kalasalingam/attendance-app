@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/models/attendance_model.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/glass_button.dart';
-import '../../../../core/widgets/glass_dialog.dart';
-import '../../../../core/widgets/glass_text_field.dart';
+import '../../../core/models/attendance_model.dart';
+import '../../../core/network/api_client.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/glass_button.dart';
+import '../../../core/widgets/glass_dialog.dart';
+import '../../../core/widgets/glass_text_field.dart';
+import '../../dashboard/providers/dashboard_provider.dart';
+import '../../salary/providers/salary_provider.dart';
 import '../providers/employee_provider.dart';
 
 class EditEmployeeDialog extends ConsumerStatefulWidget {
@@ -91,6 +93,9 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
 
       if (mounted) {
         Navigator.of(context).pop();
+        ref.read(dashboardNotifierProvider.notifier).loadData();
+        ref.invalidate(employeesListProvider);
+        ref.read(salaryNotifierProvider.notifier).loadPayroll();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Employee "${_nameController.text}" updated successfully!'),
@@ -145,6 +150,9 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
         await service.setEmployeeStatus(id: widget.row.employeeId, isActive: false);
         if (mounted) {
           Navigator.of(context).pop();
+          ref.read(dashboardNotifierProvider.notifier).loadData();
+          ref.invalidate(employeesListProvider);
+          ref.read(salaryNotifierProvider.notifier).loadPayroll();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Employee deactivated.')),
           );

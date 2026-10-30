@@ -3,11 +3,10 @@ import '../../../core/models/employee_model.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/endpoints.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../../dashboard/providers/dashboard_provider.dart';
 
 final employeeServiceProvider = Provider<EmployeeService>((ref) {
   final apiClient = ref.watch(apiClientProvider);
-  return EmployeeService(apiClient: apiClient, ref: ref);
+  return EmployeeService(apiClient: apiClient);
 });
 
 final employeesListProvider = FutureProvider<List<EmployeeModel>>((ref) async {
@@ -17,9 +16,8 @@ final employeesListProvider = FutureProvider<List<EmployeeModel>>((ref) async {
 
 class EmployeeService {
   final ApiClient apiClient;
-  final Ref ref;
 
-  EmployeeService({required this.apiClient, required this.ref});
+  EmployeeService({required this.apiClient});
 
   Future<List<EmployeeModel>> getEmployees({String? search, bool? activeOnly}) async {
     final queryParams = <String, dynamic>{};
@@ -59,13 +57,7 @@ class EmployeeService {
       },
     );
 
-    final newEmp = EmployeeModel.fromJson(response.data as Map<String, dynamic>);
-
-    // Trigger dashboard and employees list refresh
-    ref.read(dashboardNotifierProvider.notifier).loadData();
-    ref.invalidate(employeesListProvider);
-
-    return newEmp;
+    return EmployeeModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<EmployeeModel> updateEmployee({
@@ -93,10 +85,7 @@ class EmployeeService {
       },
     );
 
-    final updatedEmp = EmployeeModel.fromJson(response.data as Map<String, dynamic>);
-    ref.read(dashboardNotifierProvider.notifier).loadData();
-    ref.invalidate(employeesListProvider);
-    return updatedEmp;
+    return EmployeeModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<void> setEmployeeStatus({required String id, required bool isActive}) async {
@@ -104,7 +93,5 @@ class EmployeeService {
       Endpoints.employeeStatus(id),
       data: {'is_active': isActive},
     );
-    ref.read(dashboardNotifierProvider.notifier).loadData();
-    ref.invalidate(employeesListProvider);
   }
 }
