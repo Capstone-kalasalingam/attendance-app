@@ -276,28 +276,63 @@ class _EditEmployeeDialogState extends ConsumerState<EditEmployeeDialog> {
           const SizedBox(height: 24),
 
           // Actions
-          Row(
-            children: [
-              TextButton.icon(
-                onPressed: _deactivate,
-                icon: const Icon(Icons.person_off_rounded, size: 16, color: AppColors.absentRose),
-                label: const Text('Deactivate', style: TextStyle(color: AppColors.absentRose, fontSize: 12)),
-              ),
-              const Spacer(),
-              GlassButton(
-                text: 'Cancel',
-                variant: GlassButtonVariant.ghost,
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              const SizedBox(width: 10),
-              GlassButton(
-                text: 'Update',
-                icon: Icons.save_rounded,
-                isLoading: _isLoading,
-                onPressed: _submit,
-                variant: GlassButtonVariant.primary,
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 360;
+              if (isMobile) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    GlassButton(
+                      text: 'Update Employee',
+                      icon: Icons.save_rounded,
+                      isLoading: _isLoading,
+                      onPressed: _submit,
+                      variant: GlassButtonVariant.primary,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton.icon(
+                          onPressed: _deactivate,
+                          icon: const Icon(Icons.person_off_rounded, size: 16, color: AppColors.absentRose),
+                          label: const Text('Deactivate', style: TextStyle(color: AppColors.absentRose, fontSize: 12)),
+                        ),
+                        GlassButton(
+                          text: 'Cancel',
+                          variant: GlassButtonVariant.ghost,
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  TextButton.icon(
+                    onPressed: _deactivate,
+                    icon: const Icon(Icons.person_off_rounded, size: 16, color: AppColors.absentRose),
+                    label: const Text('Deactivate', style: TextStyle(color: AppColors.absentRose, fontSize: 12)),
+                  ),
+                  const Spacer(),
+                  GlassButton(
+                    text: 'Cancel',
+                    variant: GlassButtonVariant.ghost,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const SizedBox(width: 10),
+                  GlassButton(
+                    text: 'Update',
+                    icon: Icons.save_rounded,
+                    isLoading: _isLoading,
+                    onPressed: _submit,
+                    variant: GlassButtonVariant.primary,
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),

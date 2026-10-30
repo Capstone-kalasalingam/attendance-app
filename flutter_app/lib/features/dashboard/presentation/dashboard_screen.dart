@@ -13,6 +13,8 @@ import '../../exports/presentation/export_excel_dialog.dart';
 import '../providers/dashboard_provider.dart';
 import 'widgets/attendance_row_widget.dart';
 import 'widgets/dashboard_stats_header.dart';
+import 'widgets/date_range_picker_dialog.dart';
+import 'widgets/employee_range_card.dart';
 import 'widgets/quick_filter_chips.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -29,6 +31,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _openDateOrRangePicker(DashboardState state, DashboardNotifier notifier) async {
+    final result = await DateRangePickerDialog.show(
+      context,
+      currentSingleDate: state.selectedDate,
+      currentRange: state.isRangeMode && state.startDate != null && state.endDate != null
+          ? DateTimeRange(start: state.startDate!, end: state.endDate!)
+          : null,
+      initialIsRange: state.isRangeMode,
+    );
+
+    if (result != null) {
+      if (result.isRange && result.range != null) {
+        notifier.setDateRange(result.range!.start, result.range!.end);
+      } else if (!result.isRange && result.singleDate != null) {
+        notifier.setDate(result.singleDate!);
+      }
+    }
   }
 
   Future<void> _pickDate(DateTime currentDate) async {
@@ -136,65 +157,141 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         _buildFilterToolbar(dashboardState, dashboardNotifier),
                         const SizedBox(height: 16),
 
-                        // Bulk Action Bar (if items selected)
-                        if (dashboardState.selectedEmployeeIds.isNotEmpty) ...[
+                        // Bulk Action Bar or Range Mode Info Banner
+                        if (dashboardState.isRangeMode) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEEF2FF),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFC7D2FE)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.insights_rounded, size: 18, color: Color(0xFF4F46E5)),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Aggregated report: ${dashboardState.rangeTitle} (${dashboardState.totalRangeDays} days)',
+                                    style: const TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF4F46E5),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                InkWell(
+                                  onTap: () => dashboardNotifier.clearDateRange(),
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: const Color(0xFFC7D2FE)),
+                                    ),
+                                    child: const Text(
+                                      'Back to Today',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF4F46E5),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                        ] else if (dashboardState.selectedEmployeeIds.isNotEmpty) ...[
                           _buildBulkActionBar(dashboardState, dashboardNotifier),
                           const SizedBox(height: 14),
                         ],
 
                         // Main Attendance List
-                        if (dashboardState.isLoading && dashboardState.allRows.isEmpty)
+                        if (dashboardState.isLoading &&
+                            ((dashboardState.isRangeMode && dashboardState.rangeAggregates.isEmpty) ||
+                             (!dashboardState.isRangeMode && dashboardState.allRows.isEmpty)))
                           const Padding(
                             padding: EdgeInsets.all(40),
                             child: Center(
                               child: CircularProgressIndicator(color: Color(0xFF4F46E5)),
                             ),
                           )
-                        else if (dashboardState.error != null && dashboardState.allRows.isEmpty)
+                        else if (dashboardState.error != null &&
+                            ((dashboardState.isRangeMode && dashboardState.rangeAggregates.isEmpty) ||
+                             (!dashboardState.isRangeMode && dashboardState.allRows.isEmpty)))
                           ErrorStateWidget(
                             message: dashboardState.error!,
                             onRetry: () => dashboardNotifier.loadData(),
                           )
-                        else if (dashboardState.filteredRows.isEmpty)
-                          EmptyStateWidget(
-                            title: dashboardState.searchQuery.isNotEmpty
-                                ? 'No matching employees'
-                                : 'No employees found',
-                            description: dashboardState.searchQuery.isNotEmpty
-                                ? 'No employee matched "${dashboardState.searchQuery}". Try clearing filters.'
-                                : 'Click "Add Employee" to create your first team member.',
-                            icon: Icons.person_search_rounded,
-                            actionLabel: dashboardState.searchQuery.isNotEmpty ? 'Clear Search' : 'Add Employee',
-                            onAction: () {
-                              if (dashboardState.searchQuery.isNotEmpty) {
-                                _searchController.clear();
-                                dashboardNotifier.setSearchQuery('');
-                              } else {
-                                AddEmployeeDialog.show(context);
-                              }
-                            },
-                          )
-                        else
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: dashboardState.filteredRows.length,
-                            itemBuilder: (context, index) {
-                              final row = dashboardState.filteredRows[index];
-                              final isSelected = dashboardState.selectedEmployeeIds.contains(row.employeeId);
+                        else if (dashboardState.isRangeMode) ...[
+                          if (dashboardState.filteredRangeAggregates.isEmpty)
+                            EmptyStateWidget(
+                              title: dashboardState.searchQuery.isNotEmpty
+                                  ? 'No matching employees'
+                                  : 'No records found',
+                              description: 'No attendance data found in the selected date range.',
+                              icon: Icons.date_range_rounded,
+                              actionLabel: 'Reset to Today',
+                              onAction: () => dashboardNotifier.clearDateRange(),
+                            )
+                          else
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: dashboardState.filteredRangeAggregates.length,
+                              itemBuilder: (context, index) {
+                                final agg = dashboardState.filteredRangeAggregates[index];
+                                return EmployeeRangeCard(aggregate: agg);
+                              },
+                            ),
+                        ] else ...[
+                          if (dashboardState.filteredRows.isEmpty)
+                            EmptyStateWidget(
+                              title: dashboardState.searchQuery.isNotEmpty
+                                  ? 'No matching employees'
+                                  : 'No employees found',
+                              description: dashboardState.searchQuery.isNotEmpty
+                                  ? 'No employee matched "${dashboardState.searchQuery}". Try clearing filters.'
+                                  : 'Click "Add Employee" to create your first team member.',
+                              icon: Icons.person_search_rounded,
+                              actionLabel: dashboardState.searchQuery.isNotEmpty ? 'Clear Search' : 'Add Employee',
+                              onAction: () {
+                                if (dashboardState.searchQuery.isNotEmpty) {
+                                  _searchController.clear();
+                                  dashboardNotifier.setSearchQuery('');
+                                } else {
+                                  AddEmployeeDialog.show(context);
+                                }
+                              },
+                            )
+                          else
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: dashboardState.filteredRows.length,
+                              itemBuilder: (context, index) {
+                                final row = dashboardState.filteredRows[index];
+                                final isSelected = dashboardState.selectedEmployeeIds.contains(row.employeeId);
 
-                              return AttendanceRowWidget(
-                                row: row,
-                                isSelected: isSelected,
-                                onSelectChanged: (_) => dashboardNotifier.toggleEmployeeSelection(row.employeeId),
-                                onStatusChanged: (status) => dashboardNotifier.markStatus(row.employeeId, status),
-                                onShiftChanged: (shift) => dashboardNotifier.changeShift(row.employeeId, shift),
-                                onHoursChanged: (hours) => dashboardNotifier.updateHours(row.employeeId, hours),
-                                onDescriptionChanged: (desc) => dashboardNotifier.updateWorkDescription(row.employeeId, desc),
-                                onEditEmployee: () => EditEmployeeDialog.show(context, row),
-                              );
-                            },
-                          ),
+                                return AttendanceRowWidget(
+                                  row: row,
+                                  isSelected: isSelected,
+                                  onSelectChanged: (_) => dashboardNotifier.toggleEmployeeSelection(row.employeeId),
+                                  onStatusChanged: (status) => dashboardNotifier.markStatus(row.employeeId, status),
+                                  onShiftChanged: (shift) => dashboardNotifier.changeShift(row.employeeId, shift),
+                                  onHoursChanged: (hours) => dashboardNotifier.updateHours(row.employeeId, hours),
+                                  onDescriptionChanged: (desc) => dashboardNotifier.updateWorkDescription(row.employeeId, desc),
+                                  onEditEmployee: () => EditEmployeeDialog.show(context, row),
+                                );
+                              },
+                            ),
+                        ],
                       ],
                     ),
                   ),
@@ -268,7 +365,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                   // Date Picker & Navigator (Desktop)
                   if (!isMobile) ...[
-                    _buildDateNavigator(dashboardState, dashboardNotifier),
+                    _buildDateNavigator(dashboardState, dashboardNotifier, isMobile: false),
                   ],
 
                   const Spacer(),
@@ -381,7 +478,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _buildDateNavigator(dashboardState, dashboardNotifier)),
+                    Expanded(child: _buildDateNavigator(dashboardState, dashboardNotifier, isMobile: true)),
                     const SizedBox(width: 8),
                     IconButton(
                       icon: const Icon(Icons.person_add_alt_1_rounded, size: 20, color: Color(0xFF4F46E5)),
@@ -419,11 +516,45 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   // DATE NAVIGATOR CAPSULE
-  Widget _buildDateNavigator(DashboardState state, DashboardNotifier notifier) {
+  Widget _buildDateNavigator(
+    DashboardState state,
+    DashboardNotifier notifier, {
+    required bool isMobile,
+  }) {
     final now = DateTime.now();
     final isToday = state.selectedDate.year == now.year &&
         state.selectedDate.month == now.month &&
         state.selectedDate.day == now.day;
+    final dateLabel = isMobile ? state.compactDateTitle : state.formattedDateTitle;
+
+    final datePickerButton = InkWell(
+      onTap: () => _pickDate(state.selectedDate),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: isMobile ? 6 : 10, vertical: 4),
+        child: Row(
+          mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.calendar_today_rounded, size: 14, color: Color(0xFF4F46E5)),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                dateLabel,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -434,45 +565,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         boxShadow: const [AppColors.cardShadow],
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left_rounded, size: 20, color: AppColors.textPrimary),
             splashRadius: 18,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             onPressed: () {
               notifier.setDate(state.selectedDate.subtract(const Duration(days: 1)));
             },
           ),
-          InkWell(
-            onTap: () => _pickDate(state.selectedDate),
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.calendar_today_rounded, size: 14, color: Color(0xFF4F46E5)),
-                  const SizedBox(width: 6),
-                  Text(
-                    state.formattedDateTitle,
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          if (isMobile)
+            Expanded(child: datePickerButton)
+          else
+            datePickerButton,
           IconButton(
             icon: const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textPrimary),
             splashRadius: 18,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             onPressed: () {
               notifier.setDate(state.selectedDate.add(const Duration(days: 1)));
             },
@@ -483,7 +595,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onTap: () => notifier.setDate(DateTime.now()),
               borderRadius: BorderRadius.circular(6),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEEF2FF),
                   borderRadius: BorderRadius.circular(6),
@@ -580,43 +692,132 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final count = state.selectedEmployeeIds.length;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFF818CF8)),
         boxShadow: const [AppColors.cardShadow],
       ),
-      child: Row(
-        children: [
-          const Icon(Icons.checklist_rounded, color: Color(0xFF4F46E5), size: 20),
-          const SizedBox(width: 10),
-          Text(
-            '$count employees selected',
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const Spacer(),
-          TextButton(
-            onPressed: () => notifier.selectAllFiltered(false),
-            child: const Text('Deselect All', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.presentEmerald,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-            onPressed: () => _confirmBulkPresent(state.selectedEmployeeIds),
-            icon: const Icon(Icons.check_rounded, size: 16),
-            label: const Text('Mark Present (8h)', style: TextStyle(fontFamily: 'Poppins', fontSize: 12)),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 460;
+
+          if (isCompact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.checklist_rounded, color: Color(0xFF4F46E5), size: 16),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '$count employee${count > 1 ? "s" : ""} selected',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () => notifier.selectAllFiltered(false),
+                      child: const Text(
+                        'Deselect All',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: AppColors.textMuted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.presentEmerald,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                    elevation: 0,
+                  ),
+                  onPressed: () => _confirmBulkPresent(state.selectedEmployeeIds),
+                  icon: const Icon(Icons.check_rounded, size: 16),
+                  label: const Text(
+                    'Mark Present (8h)',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.checklist_rounded, color: Color(0xFF4F46E5), size: 18),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '$count employee${count > 1 ? "s" : ""} selected',
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => notifier.selectAllFiltered(false),
+                child: const Text('Deselect All', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.presentEmerald,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  elevation: 0,
+                ),
+                onPressed: () => _confirmBulkPresent(state.selectedEmployeeIds),
+                icon: const Icon(Icons.check_rounded, size: 16),
+                label: const Text(
+                  'Mark Present (8h)',
+                  style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

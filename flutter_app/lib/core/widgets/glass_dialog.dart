@@ -44,7 +44,7 @@ class GlassDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: GlassPanel(
@@ -59,7 +59,7 @@ class GlassDialog extends StatelessWidget {
               offset: Offset(0, 8),
             ),
           ],
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,7 +83,7 @@ class GlassDialog extends StatelessWidget {
                       title,
                       style: const TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
@@ -96,18 +96,20 @@ class GlassDialog extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               const Divider(color: AppColors.glassBorder, height: 1),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
               // Body
               Flexible(child: SingleChildScrollView(child: content)),
 
               // Actions
               if (actions != null && actions!.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                const SizedBox(height: 20),
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: actions!,
                 ),
               ],

@@ -278,15 +278,16 @@ class _AddEmployeeDialogState extends ConsumerState<AddEmployeeDialog> {
           const SizedBox(height: 24),
 
           // Actions
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 10,
+            runSpacing: 8,
             children: [
               GlassButton(
                 text: 'Cancel',
                 variant: GlassButtonVariant.ghost,
                 onPressed: () => Navigator.of(context).pop(),
               ),
-              const SizedBox(width: 12),
               GlassButton(
                 text: 'Save Employee',
                 icon: Icons.check_rounded,

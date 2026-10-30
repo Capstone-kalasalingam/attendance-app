@@ -9,15 +9,24 @@ import '../providers/export_provider.dart';
 
 class ExportExcelDialog extends ConsumerStatefulWidget {
   final DateTime initialDate;
+  final DateTimeRange? initialRange;
 
-  const ExportExcelDialog({super.key, required this.initialDate});
+  const ExportExcelDialog({
+    super.key,
+    required this.initialDate,
+    this.initialRange,
+  });
 
-  static Future<void> show(BuildContext context, DateTime date) {
+  static Future<void> show(
+    BuildContext context,
+    DateTime date, {
+    DateTimeRange? range,
+  }) {
     return GlassDialog.show(
       context: context,
       title: 'Export Attendance to Excel (.xlsx)',
       titleIcon: Icons.table_chart_rounded,
-      content: ExportExcelDialog(initialDate: date),
+      content: ExportExcelDialog(initialDate: date, initialRange: range),
     );
   }
 
@@ -38,8 +47,13 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
   @override
   void initState() {
     super.initState();
-    _startDate = widget.initialDate;
-    _endDate = widget.initialDate;
+    if (widget.initialRange != null) {
+      _startDate = widget.initialRange!.start;
+      _endDate = widget.initialRange!.end;
+    } else {
+      _startDate = widget.initialDate;
+      _endDate = widget.initialDate;
+    }
   }
 
   Future<void> _selectDateRange() async {
@@ -324,15 +338,16 @@ class _ExportExcelDialogState extends ConsumerState<ExportExcelDialog> {
         const SizedBox(height: 24),
 
         // Actions
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 10,
+          runSpacing: 8,
           children: [
             GlassButton(
               text: 'Close',
               variant: GlassButtonVariant.ghost,
               onPressed: () => Navigator.of(context).pop(),
             ),
-            const SizedBox(width: 10),
             GlassButton(
               text: 'Download .xlsx',
               icon: Icons.download_rounded,

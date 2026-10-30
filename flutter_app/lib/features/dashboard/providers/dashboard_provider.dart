@@ -8,9 +8,13 @@ import '../../auth/providers/auth_provider.dart';
 
 class DashboardState {
   final DateTime selectedDate;
+  final bool isRangeMode;
+  final DateTime? startDate;
+  final DateTime? endDate;
   final String searchQuery;
   final String quickFilter; // 'all', 'present', 'absent', 'morning', 'night'
   final List<AttendanceRowModel> allRows;
+  final List<EmployeeRangeAggregate> rangeAggregates;
   final AttendanceSummaryModel? summary;
   final bool isLoading;
   final String? error;
@@ -18,9 +22,13 @@ class DashboardState {
 
   const DashboardState({
     required this.selectedDate,
+    this.isRangeMode = false,
+    this.startDate,
+    this.endDate,
     this.searchQuery = '',
     this.quickFilter = 'all',
     this.allRows = const [],
+    this.rangeAggregates = const [],
     this.summary,
     this.isLoading = false,
     this.error,
@@ -29,6 +37,47 @@ class DashboardState {
 
   String get dateString => DateFormat('yyyy-MM-dd').format(selectedDate);
   String get formattedDateTitle => DateFormat('EEEE, MMM d, yyyy').format(selectedDate);
+  String get compactDateTitle => DateFormat('EEE, MMM d, yyyy').format(selectedDate);
+
+  String get rangeTitle {
+    if (startDate == null || endDate == null) return formattedDateTitle;
+    final f = DateFormat('MMM d, yyyy');
+    if (startDate!.year == endDate!.year) {
+      final fShort = DateFormat('MMM d');
+      return '${fShort.format(startDate!)} – ${f.format(endDate!)}';
+    }
+    return '${f.format(startDate!)} – ${f.format(endDate!)}';
+  }
+
+  int get totalRangeDays {
+    if (startDate == null || endDate == null) return 1;
+    return endDate!.difference(startDate!).inDays + 1;
+  }
+
+  List<EmployeeRangeAggregate> get filteredRangeAggregates {
+    return rangeAggregates.where((agg) {
+      if (searchQuery.isNotEmpty) {
+        final q = searchQuery.toLowerCase();
+        final matchName = agg.fullName.toLowerCase().contains(q);
+        final matchCode = agg.employeeCode.toLowerCase().contains(q);
+        final matchDesig = (agg.designation ?? '').toLowerCase().contains(q);
+        if (!matchName && !matchCode && !matchDesig) return false;
+      }
+      switch (quickFilter) {
+        case 'present':
+          return agg.daysPresent > 0;
+        case 'absent':
+          return agg.daysAbsent > 0;
+        case 'morning':
+          return agg.morningShifts > 0;
+        case 'night':
+          return agg.nightShifts > 0;
+        case 'all':
+        default:
+          return true;
+      }
+    }).toList();
+  }
 
   List<AttendanceRowModel> get filteredRows {
     return allRows.where((row) {
@@ -60,9 +109,13 @@ class DashboardState {
 
   DashboardState copyWith({
     DateTime? selectedDate,
+    bool? isRangeMode,
+    DateTime? Function()? startDate,
+    DateTime? Function()? endDate,
     String? searchQuery,
     String? quickFilter,
     List<AttendanceRowModel>? allRows,
+    List<EmployeeRangeAggregate>? rangeAggregates,
     AttendanceSummaryModel? Function()? summary,
     bool? isLoading,
     String? Function()? error,
@@ -70,9 +123,13 @@ class DashboardState {
   }) {
     return DashboardState(
       selectedDate: selectedDate ?? this.selectedDate,
+      isRangeMode: isRangeMode ?? this.isRangeMode,
+      startDate: startDate != null ? startDate() : this.startDate,
+      endDate: endDate != null ? endDate() : this.endDate,
       searchQuery: searchQuery ?? this.searchQuery,
       quickFilter: quickFilter ?? this.quickFilter,
       allRows: allRows ?? this.allRows,
+      rangeAggregates: rangeAggregates ?? this.rangeAggregates,
       summary: summary != null ? summary() : this.summary,
       isLoading: isLoading ?? this.isLoading,
       error: error != null ? error() : this.error,
@@ -96,12 +153,39 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
   }
 
   void setDate(DateTime date) {
-    if (state.selectedDate.year == date.year &&
+    if (!state.isRangeMode &&
+        state.selectedDate.year == date.year &&
         state.selectedDate.month == date.month &&
         state.selectedDate.day == date.day) {
       return;
     }
-    state = state.copyWith(selectedDate: date, selectedEmployeeIds: const {});
+    state = state.copyWith(
+      isRangeMode: false,
+      selectedDate: date,
+      startDate: () => null,
+      endDate: () => null,
+      selectedEmployeeIds: const {},
+    );
+    loadData();
+  }
+
+  Future<void> setDateRange(DateTime start, DateTime end) async {
+    state = state.copyWith(
+      isRangeMode: true,
+      startDate: () => start,
+      endDate: () => end,
+      selectedEmployeeIds: const {},
+    );
+    await loadRangeData();
+  }
+
+  void clearDateRange() {
+    state = state.copyWith(
+      isRangeMode: false,
+      startDate: () => null,
+      endDate: () => null,
+      selectedEmployeeIds: const {},
+    );
     loadData();
   }
 
@@ -133,6 +217,10 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
   }
 
   Future<void> loadData() async {
+    if (state.isRangeMode) {
+      return loadRangeData();
+    }
+
     state = state.copyWith(isLoading: true, error: () => null);
     final dateStr = state.dateString;
 
@@ -151,6 +239,122 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
         allRows: rows,
         summary: () => summary,
         isLoading: false,
+        error: () => null,
+      );
+    } catch (e) {
+      final msg = ApiClient.parseError(e);
+      state = state.copyWith(isLoading: false, error: () => msg);
+    }
+  }
+
+  Future<void> loadRangeData() async {
+    if (state.startDate == null || state.endDate == null) return;
+    state = state.copyWith(isLoading: true, error: () => null);
+
+    final startStr = DateFormat('yyyy-MM-dd').format(state.startDate!);
+    final endStr = DateFormat('yyyy-MM-dd').format(state.endDate!);
+
+    try {
+      final responses = await Future.wait([
+        apiClient.dio.get(Endpoints.employees),
+        apiClient.dio.get(Endpoints.attendanceHistory, queryParameters: {
+          'start_date': startStr,
+          'end_date': endStr,
+        }),
+      ]);
+
+      final employeesData = responses[0].data as List;
+      final historyData = responses[1].data as List;
+
+      final historyRecords = historyData
+          .map((r) => AttendanceRecordModel.fromJson(r as Map<String, dynamic>))
+          .toList();
+
+      final Map<String, List<AttendanceRecordModel>> recordsByEmp = {};
+      for (final rec in historyRecords) {
+        recordsByEmp.putIfAbsent(rec.employeeId, () => []).add(rec);
+      }
+
+      final totalDays = state.totalRangeDays;
+      int totalPresentRecords = 0;
+      int totalAbsentRecords = 0;
+      int totalMorningShifts = 0;
+      int totalNightShifts = 0;
+      double totalHoursSum = 0.0;
+
+      final List<EmployeeRangeAggregate> aggregates = [];
+
+      for (final empJson in employeesData) {
+        final empMap = empJson as Map<String, dynamic>;
+        final empId = empMap['id']?.toString() ?? '';
+        final empCode = empMap['employee_code']?.toString() ?? '';
+        final fullName = empMap['full_name']?.toString() ?? '';
+        final designation = empMap['designation'] as String?;
+        final defaultShift = (empMap['default_shift'] as String?)?.toLowerCase() ?? 'morning';
+
+        final empRecords = recordsByEmp[empId] ?? [];
+
+        int pCount = 0;
+        int aCount = 0;
+        int mShifts = 0;
+        int nShifts = 0;
+        double empHours = 0.0;
+
+        for (final rec in empRecords) {
+          if (rec.isPresent) {
+            pCount++;
+            empHours += rec.hoursWorked;
+            if (rec.shift == 'morning') mShifts++;
+            if (rec.shift == 'night') nShifts++;
+          } else if (rec.isAbsent) {
+            aCount++;
+          }
+        }
+
+        totalPresentRecords += pCount;
+        totalAbsentRecords += aCount;
+        totalMorningShifts += mShifts;
+        totalNightShifts += nShifts;
+        totalHoursSum += empHours;
+
+        aggregates.add(EmployeeRangeAggregate(
+          employeeId: empId,
+          employeeCode: empCode,
+          fullName: fullName,
+          designation: designation,
+          defaultShift: defaultShift,
+          daysPresent: pCount,
+          daysAbsent: aCount,
+          morningShifts: mShifts,
+          nightShifts: nShifts,
+          totalHours: empHours,
+          totalRangeDays: totalDays,
+          records: empRecords,
+        ));
+      }
+
+      final activeCount = aggregates.length;
+      final expectedPersonDays = activeCount * totalDays;
+      final completion = expectedPersonDays > 0
+          ? (totalPresentRecords / expectedPersonDays) * 100.0
+          : 0.0;
+
+      final summary = AttendanceSummaryModel(
+        date: '$startStr to $endStr',
+        totalActiveEmployees: activeCount,
+        presentCount: totalPresentRecords,
+        absentCount: totalAbsentRecords,
+        notMarkedCount: (expectedPersonDays - totalPresentRecords - totalAbsentRecords).clamp(0, expectedPersonDays),
+        morningShiftCount: totalMorningShifts,
+        nightShiftCount: totalNightShifts,
+        totalHoursWorked: totalHoursSum,
+        completionPercentage: completion,
+      );
+
+      state = state.copyWith(
+        isLoading: false,
+        rangeAggregates: aggregates,
+        summary: () => summary,
         error: () => null,
       );
     } catch (e) {

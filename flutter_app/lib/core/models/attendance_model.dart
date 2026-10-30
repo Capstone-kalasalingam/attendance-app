@@ -84,3 +84,80 @@ class AttendanceRowModel {
     );
   }
 }
+
+class AttendanceRecordModel {
+  final String id;
+  final String employeeId;
+  final String attendanceDate;
+  final String shift;
+  final String status;
+  final double hoursWorked;
+  final String? workDescription;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  AttendanceRecordModel({
+    required this.id,
+    required this.employeeId,
+    required this.attendanceDate,
+    required this.shift,
+    required this.status,
+    required this.hoursWorked,
+    this.workDescription,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  bool get isPresent => status == 'present';
+  bool get isAbsent => status == 'absent';
+
+  factory AttendanceRecordModel.fromJson(Map<String, dynamic> json) {
+    return AttendanceRecordModel(
+      id: json['id']?.toString() ?? '',
+      employeeId: json['employee_id']?.toString() ?? '',
+      attendanceDate: json['attendance_date']?.toString() ?? '',
+      shift: (json['shift'] as String?)?.toLowerCase() ?? 'morning',
+      status: (json['status'] as String?)?.toLowerCase() ?? 'present',
+      hoursWorked: (json['hours_worked'] as num?)?.toDouble() ?? 0.0,
+      workDescription: json['work_description'] as String?,
+      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
+      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'].toString()) : null,
+    );
+  }
+}
+
+class EmployeeRangeAggregate {
+  final String employeeId;
+  final String employeeCode;
+  final String fullName;
+  final String? designation;
+  final String defaultShift;
+  final int daysPresent;
+  final int daysAbsent;
+  final int morningShifts;
+  final int nightShifts;
+  final double totalHours;
+  final int totalRangeDays;
+  final List<AttendanceRecordModel> records;
+
+  EmployeeRangeAggregate({
+    required this.employeeId,
+    required this.employeeCode,
+    required this.fullName,
+    this.designation,
+    required this.defaultShift,
+    required this.daysPresent,
+    required this.daysAbsent,
+    required this.morningShifts,
+    required this.nightShifts,
+    required this.totalHours,
+    required this.totalRangeDays,
+    required this.records,
+  });
+
+  double get attendancePercentage =>
+      totalRangeDays > 0 ? (daysPresent / totalRangeDays) * 100 : 0.0;
+  double get averageDailyHours =>
+      daysPresent > 0 ? totalHours / daysPresent : 0.0;
+}
+

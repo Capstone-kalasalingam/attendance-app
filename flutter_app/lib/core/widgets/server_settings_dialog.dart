@@ -276,45 +276,91 @@ class _ServerSettingsDialogState extends ConsumerState<ServerSettingsDialog> {
           ),
           const SizedBox(height: 24),
 
-          // Actions
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextButton(
-                onPressed: _resetDefault,
-                child: const Text(
-                  'Reset Default',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+          // Actions (Responsive to avoid overflow on narrow screens)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 380) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    GlassButton(
+                      text: 'Save & Connect',
+                      icon: Icons.check_rounded,
+                      onPressed: _applyNewAddress,
+                      variant: GlassButtonVariant.primary,
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: _resetDefault,
+                          child: const Text(
+                            'Reset Default',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 13,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _resetDefault,
                     child: const Text(
-                      'Cancel',
+                      'Reset Default',
                       style: TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 13,
+                        fontSize: 12,
                         color: AppColors.textMuted,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  GlassButton(
-                    text: 'Save & Connect',
-                    icon: Icons.check_rounded,
-                    onPressed: _applyNewAddress,
-                    variant: GlassButtonVariant.primary,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 13,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GlassButton(
+                        text: 'Save & Connect',
+                        icon: Icons.check_rounded,
+                        onPressed: _applyNewAddress,
+                        variant: GlassButtonVariant.primary,
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ],
       ),
