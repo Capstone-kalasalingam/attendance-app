@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/glass_button.dart';
-import '../../../../core/widgets/glass_dialog.dart';
 
 class DateRangeSelectionResult {
   final bool isRange;
@@ -18,12 +16,26 @@ class DateRangeSelectionResult {
         singleDate = null;
 }
 
-class DateRangePickerDialog extends StatefulWidget {
+Future<DateRangeSelectionResult?> showAppDateRangePicker(
+  BuildContext context, {
+  required DateTime currentSingleDate,
+  DateTimeRange? currentRange,
+  bool initialIsRange = false,
+}) {
+  return AppDateRangePickerDialog.show(
+    context,
+    currentSingleDate: currentSingleDate,
+    currentRange: currentRange,
+    initialIsRange: initialIsRange,
+  );
+}
+
+class AppDateRangePickerDialog extends StatefulWidget {
   final DateTime currentSingleDate;
   final DateTimeRange? currentRange;
   final bool initialIsRange;
 
-  const DateRangePickerDialog({
+  const AppDateRangePickerDialog({
     super.key,
     required this.currentSingleDate,
     this.currentRange,
@@ -41,7 +53,7 @@ class DateRangePickerDialog extends StatefulWidget {
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        child: DateRangePickerDialog(
+        child: AppDateRangePickerDialog(
           currentSingleDate: currentSingleDate,
           currentRange: currentRange,
           initialIsRange: initialIsRange,
@@ -51,10 +63,10 @@ class DateRangePickerDialog extends StatefulWidget {
   }
 
   @override
-  State<DateRangePickerDialog> createState() => _DateRangePickerDialogState();
+  State<AppDateRangePickerDialog> createState() => _AppDateRangePickerDialogState();
 }
 
-class _DateRangePickerDialogState extends State<DateRangePickerDialog> {
+class _AppDateRangePickerDialogState extends State<AppDateRangePickerDialog> {
   late bool _isRangeMode;
   late DateTime _selectedSingleDate;
   late DateTime _startDate;

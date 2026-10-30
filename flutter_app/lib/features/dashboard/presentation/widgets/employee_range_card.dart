@@ -157,13 +157,13 @@ class EmployeeRangeCard extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: rec.isPresent
-                                      ? AppColors.presentEmeraldBg
-                                      : AppColors.absentRoseBg,
+                                      ? AppColors.presentBg
+                                      : AppColors.absentBg,
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
                                     color: rec.isPresent
-                                        ? AppColors.presentEmeraldBorder
-                                        : AppColors.absentRoseBorder,
+                                        ? AppColors.presentBorder
+                                        : AppColors.absentBorder,
                                   ),
                                 ),
                                 child: Text(
@@ -409,15 +409,15 @@ class EmployeeRangeCard extends StatelessWidget {
                   icon: Icons.check_circle_rounded,
                   label: '${aggregate.daysPresent} Days Present',
                   color: AppColors.presentEmerald,
-                  bg: AppColors.presentEmeraldBg,
-                  border: AppColors.presentEmeraldBorder,
+                  bg: AppColors.presentBg,
+                  border: AppColors.presentBorder,
                 ),
                 _buildMetricChip(
                   icon: Icons.cancel_rounded,
                   label: '${aggregate.daysAbsent} Days Absent',
                   color: AppColors.absentRose,
-                  bg: AppColors.absentRoseBg,
-                  border: AppColors.absentRoseBorder,
+                  bg: AppColors.absentBg,
+                  border: AppColors.absentBorder,
                 ),
                 _buildMetricChip(
                   icon: Icons.timer_outlined,

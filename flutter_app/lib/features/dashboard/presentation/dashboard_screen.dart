@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_button.dart';
-import '../../../../core/widgets/glass_panel.dart';
 import '../../../../core/widgets/loading_overlay.dart';
 import '../../../../core/widgets/server_settings_dialog.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -34,7 +32,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Future<void> _openDateOrRangePicker(DashboardState state, DashboardNotifier notifier) async {
-    final result = await DateRangePickerDialog.show(
+    final result = await showAppDateRangePicker(
       context,
       currentSingleDate: state.selectedDate,
       currentRange: state.isRangeMode && state.startDate != null && state.endDate != null
@@ -49,32 +47,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       } else if (!result.isRange && result.singleDate != null) {
         notifier.setDate(result.singleDate!);
       }
-    }
-  }
-
-  Future<void> _pickDate(DateTime currentDate) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: currentDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF4F46E5),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      ref.read(dashboardNotifierProvider.notifier).setDate(picked);
     }
   }
 
