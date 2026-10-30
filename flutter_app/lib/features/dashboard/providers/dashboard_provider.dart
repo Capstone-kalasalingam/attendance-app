@@ -49,6 +49,29 @@ class DashboardState {
     return '${f.format(startDate!)} – ${f.format(endDate!)}';
   }
 
+  String get compactRangeTitle {
+    if (startDate == null || endDate == null) return compactDateTitle;
+    final s = startDate!;
+    final e = endDate!;
+    if (s.year == e.year) {
+      if (s.month == e.month) {
+        return '${DateFormat('MMM d').format(s)} – ${e.day}';
+      }
+      return '${DateFormat('MMM d').format(s)} – ${DateFormat('MMM d').format(e)}';
+    }
+    return "${DateFormat('MMM d, \'yy').format(s)} – ${DateFormat('MMM d, \'yy').format(e)}";
+  }
+
+  String get fullRangeTitle {
+    if (startDate == null || endDate == null) return formattedDateTitle;
+    final s = startDate!;
+    final e = endDate!;
+    if (s.year == e.year) {
+      return '${DateFormat('MMMM d').format(s)} – ${DateFormat('MMMM d, yyyy').format(e)}';
+    }
+    return '${DateFormat('MMMM d, yyyy').format(s)} – ${DateFormat('MMMM d, yyyy').format(e)}';
+  }
+
   int get totalRangeDays {
     if (startDate == null || endDate == null) return 1;
     return endDate!.difference(startDate!).inDays + 1;

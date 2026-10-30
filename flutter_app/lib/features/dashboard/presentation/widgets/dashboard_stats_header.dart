@@ -6,11 +6,13 @@ import '../../../../core/widgets/stat_card.dart';
 class DashboardStatsHeader extends StatelessWidget {
   final AttendanceSummaryModel? summary;
   final bool isLoading;
+  final bool isRangeMode;
 
   const DashboardStatsHeader({
     super.key,
     required this.summary,
     this.isLoading = false,
+    this.isRangeMode = false,
   });
 
   @override
@@ -54,21 +56,25 @@ class DashboardStatsHeader extends StatelessWidget {
                   value: '$totalActive',
                   icon: Icons.people_alt_rounded,
                   accentColor: const Color(0xFF4F46E5),
-                  subtext: notMarked > 0 ? '$notMarked unmarked' : 'All accounted',
+                  subtext: isRangeMode
+                      ? '$totalActive employees tracked'
+                      : (notMarked > 0 ? '$notMarked unmarked' : 'All accounted'),
                 ),
                 StatCard(
-                  title: 'Present Today',
+                  title: isRangeMode ? 'Total Present' : 'Present Today',
                   value: '$present',
                   icon: Icons.check_circle_outline_rounded,
                   accentColor: AppColors.presentEmerald,
-                  subtext: '${completion.toStringAsFixed(0)}% completion',
+                  subtext: '${completion.toStringAsFixed(0)}% ${isRangeMode ? "attendance rate" : "completion"}',
                 ),
                 StatCard(
-                  title: 'Absent Today',
+                  title: isRangeMode ? 'Total Absent' : 'Absent Today',
                   value: '$absent',
                   icon: Icons.cancel_outlined,
                   accentColor: AppColors.absentRose,
-                  subtext: totalActive > 0 ? '${((absent / totalActive) * 100).toStringAsFixed(0)}% rate' : null,
+                  subtext: isRangeMode
+                      ? '$absent absence records'
+                      : (totalActive > 0 ? '${((absent / totalActive) * 100).toStringAsFixed(0)}% rate' : null),
                 ),
                 StatCard(
                   title: 'Morning Shift',

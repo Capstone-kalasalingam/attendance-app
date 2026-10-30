@@ -36,11 +36,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  void _fillDemoCredentials() {
-    _usernameController.text = 'admin';
-    _passwordController.text = 'Admin@123456';
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
@@ -267,24 +262,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           isLoading: authState.isLoading,
                           onPressed: _submitLogin,
                           variant: GlassButtonVariant.primary,
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Quick Demo Credentials Helper
-                        Center(
-                          child: TextButton.icon(
-                            onPressed: _fillDemoCredentials,
-                            icon: const Icon(Icons.flash_on_rounded, size: 16, color: Color(0xFF4F46E5)),
-                            label: const Text(
-                              'Use Admin Credentials (admin / Admin@123456)',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF4F46E5),
-                              ),
-                            ),
-                          ),
                         ),
                       ],
                     ),

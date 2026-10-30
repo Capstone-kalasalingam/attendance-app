@@ -122,6 +122,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         DashboardStatsHeader(
                           summary: dashboardState.summary,
                           isLoading: dashboardState.isLoading,
+                          isRangeMode: dashboardState.isRangeMode,
                         ),
                         const SizedBox(height: 18),
 
@@ -132,46 +133,78 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         // Bulk Action Bar or Range Mode Info Banner
                         if (dashboardState.isRangeMode) ...[
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                             decoration: BoxDecoration(
                               color: const Color(0xFFEEF2FF),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                               border: Border.all(color: const Color(0xFFC7D2FE)),
+                              boxShadow: const [AppColors.cardShadow],
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.insights_rounded, size: 18, color: Color(0xFF4F46E5)),
-                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: const Color(0xFFC7D2FE)),
+                                  ),
+                                  child: const Icon(Icons.insights_rounded, size: 18, color: Color(0xFF4F46E5)),
+                                ),
+                                const SizedBox(width: 10),
                                 Expanded(
-                                  child: Text(
-                                    'Aggregated report: ${dashboardState.rangeTitle} (${dashboardState.totalRangeDays} days)',
-                                    style: const TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF4F46E5),
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${dashboardState.totalRangeDays}-Day Attendance Report',
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF312E81),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        dashboardState.fullRangeTitle,
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF4F46E5),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
+                                const SizedBox(width: 8),
                                 InkWell(
                                   onTap: () => dashboardNotifier.clearDateRange(),
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(8),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: BorderRadius.circular(8),
                                       border: Border.all(color: const Color(0xFFC7D2FE)),
+                                      boxShadow: const [AppColors.cardShadow],
                                     ),
-                                    child: const Text(
-                                      'Back to Today',
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF4F46E5),
-                                      ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.today_rounded, size: 13, color: Color(0xFF4F46E5)),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Today',
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF4F46E5),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -459,7 +492,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     Expanded(child: _buildDateNavigator(dashboardState, dashboardNotifier, isMobile: true)),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(Icons.person_add_alt_1_rounded, size: 20, color: Color(0xFF4F46E5)),
+                      icon: const Icon(Icons.person_add_alt_1_rounded, size: 18, color: Color(0xFF4F46E5)),
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      padding: EdgeInsets.zero,
                       style: IconButton.styleFrom(
                         backgroundColor: const Color(0xFFEEF2FF),
                         shape: RoundedRectangleBorder(
@@ -472,7 +507,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                     const SizedBox(width: 6),
                     IconButton(
-                      icon: const Icon(Icons.file_download_outlined, size: 20, color: AppColors.textSecondary),
+                      icon: const Icon(Icons.file_download_outlined, size: 18, color: AppColors.textSecondary),
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      padding: EdgeInsets.zero,
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
@@ -511,30 +548,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         state.selectedDate.month == now.month &&
         state.selectedDate.day == now.day;
     final dateLabel = state.isRangeMode
-        ? state.rangeTitle
+        ? (isMobile ? state.compactRangeTitle : state.rangeTitle)
         : (isMobile ? state.compactDateTitle : state.formattedDateTitle);
 
     final datePickerButton = InkWell(
       onTap: () => _openDateOrRangePicker(state, notifier),
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: isMobile ? 6 : 10, vertical: 4),
+        padding: EdgeInsets.symmetric(horizontal: isMobile ? 4 : 8, vertical: 4),
         child: Row(
           mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               state.isRangeMode ? Icons.date_range_rounded : Icons.calendar_today_rounded,
-              size: 14,
+              size: isMobile ? 13 : 14,
               color: const Color(0xFF4F46E5),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             Flexible(
               child: Text(
                 dateLabel,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: 12,
+                  fontSize: isMobile ? 11 : 12,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
@@ -545,7 +582,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             if (state.isRangeMode) ...[
               const SizedBox(width: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEEF2FF),
                   borderRadius: BorderRadius.circular(4),
@@ -554,7 +591,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   '${state.totalRangeDays}d',
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 10,
+                    fontSize: 9,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF4F46E5),
                   ),
@@ -567,7 +604,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 2 : 4, vertical: 2),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -578,10 +615,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left_rounded, size: 20, color: AppColors.textPrimary),
-            splashRadius: 18,
+            icon: const Icon(Icons.chevron_left_rounded, size: 18, color: AppColors.textPrimary),
+            splashRadius: 16,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            constraints: BoxConstraints(minWidth: isMobile ? 22 : 28, minHeight: isMobile ? 24 : 28),
             onPressed: () {
               if (state.isRangeMode && state.startDate != null && state.endDate != null) {
                 final days = state.totalRangeDays;
@@ -599,10 +636,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           else
             datePickerButton,
           IconButton(
-            icon: const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textPrimary),
-            splashRadius: 18,
+            icon: const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textPrimary),
+            splashRadius: 16,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            constraints: BoxConstraints(minWidth: isMobile ? 22 : 28, minHeight: isMobile ? 24 : 28),
             onPressed: () {
               if (state.isRangeMode && state.startDate != null && state.endDate != null) {
                 final days = state.totalRangeDays;
@@ -616,54 +653,62 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             },
           ),
           if (state.isRangeMode) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: 2),
             InkWell(
               onTap: () => notifier.clearDateRange(),
               borderRadius: BorderRadius.circular(6),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 5 : 7,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEF2F2),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: const Color(0xFFFECACA)),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.close_rounded, size: 10, color: AppColors.absentRose),
-                    SizedBox(width: 2),
-                    Text(
-                      'Day',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.absentRose,
+                    const Icon(Icons.close_rounded, size: 11, color: AppColors.absentRose),
+                    if (!isMobile) ...[
+                      const SizedBox(width: 2),
+                      const Text(
+                        'Day',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.absentRose,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
             ),
           ] else if (!isToday) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: 2),
             InkWell(
               onTap: () => notifier.setDate(DateTime.now()),
               borderRadius: BorderRadius.circular(6),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 5 : 7,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEEF2FF),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: const Color(0xFFC7D2FE)),
                 ),
-                child: const Text(
+                child: Text(
                   'Today',
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 10,
+                    fontSize: isMobile ? 9 : 10,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF4F46E5),
+                    color: const Color(0xFF4F46E5),
                   ),
                 ),
               ),
