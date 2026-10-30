@@ -1,6 +1,6 @@
 class AppConfig {
   static const String appName = 'ShiftMaster Attendance';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.0.1';
 
   // Primary deployed server endpoint (can be overridden via --dart-define or runtime settings)
   static const String defaultApiBaseUrl =

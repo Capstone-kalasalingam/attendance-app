@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/glass_button.dart';
 import '../../../core/widgets/glass_panel.dart';
@@ -202,6 +203,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           isLoading: authState.isLoading,
                           onPressed: _submitLogin,
                           variant: GlassButtonVariant.primary,
+                        ),
+                        const SizedBox(height: 16),
+                        const Center(
+                          child: Text(
+                            'ShiftMaster v${AppConfig.appVersion}',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
                         ),
                       ],
                     ),

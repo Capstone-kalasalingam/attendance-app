@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_button.dart';
 import '../../../../core/widgets/loading_overlay.dart';
@@ -347,16 +348,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'ShiftMaster',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'ShiftMaster',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEEF2FF),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFFC7D2FE), width: 0.8),
+                            ),
+                            child: const Text(
+                              'v${AppConfig.appVersion}',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF4F46E5),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
+                      const Text(
                         'Attendance System',
                         style: TextStyle(
                           fontFamily: 'Poppins',
